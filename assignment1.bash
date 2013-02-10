@@ -65,7 +65,14 @@ echo " "
       # do something for each file in the directory
       echo -e "\nEnter directory name: "
       read dirname
+      # backup the following directory
+      echo -e "\nEnter file name: "
+      read filename
+
+      # store the date string in $date
       date=`date +%m-%d-%Y`
+      echo $date
+      
       for file in $dirname/*
       do
         # if $file is a file and not a directory
@@ -79,9 +86,13 @@ echo " "
             # compare file and its backup: if diff returns nothing, files are the same
             if diff $file $backup
             then
-              echo "Files are the same!"
+              echo "Backup is up to date. No need to create a new backup."
             else
-              echo "Files are different."
+              echo "Backup differs from original file."
+              echo "Moving $backup to $backup-$date."
+              mv $backup $backup-$date
+              echo "Creating new $backup."
+              cp $file $file.bak
             fi
           # if $file is a .bak file, ignore it; it's already been taken care of
           elif [[ $file == *.bak ]]
