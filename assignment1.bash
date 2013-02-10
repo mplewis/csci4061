@@ -72,8 +72,11 @@ echo " "
       # store the date string in $date
       date=`date +%m-%d-%Y`
       echo $date
+
+      # $files is a list of all files in $dirname, recursively
+      files=`find $dirname`
       
-      for file in $dirname/*
+      for file in $files
       do
         # if $file is a file and not a directory
         if [ -f $file ]
