@@ -1,0 +1,1 @@
+Assignments can be found at [the CSCI 4061 website](http://www-users.cselabs.umn.edu/classes/Spring-2013/csci4061/).

@@ -110,6 +110,14 @@ echo " "
         fi
       done
 
+      # if $filename is a directory
+      if [ -d $filename ]
+      then
+        if [ -e $filename ]
+        then
+          echo "Directory $filename found."
+        fi
+      fi
       #End Code
       ;;
       
