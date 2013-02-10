@@ -71,7 +71,9 @@ echo " "
 
       # store the date string in $date
       date=`date +%m-%d-%Y`
-      echo $date
+
+      # echo an empty line for spacing
+      echo
 
       # $files is a list of all files in $dirname, recursively
       files=`find $dirname`
@@ -82,10 +84,10 @@ echo " "
         if [ -f $file ]
         then
           # if a backup file exists already
-          if [ -e $file.bak ]
+          backup=$file.bak
+          if [ -e $backup ]
           then
-            echo "backup file exists for $file"
-            backup=$file.bak
+            echo "Backup file exists for $file."
             # compare file and its backup: if diff returns nothing, files are the same
             if diff $file $backup
             then
@@ -104,18 +106,33 @@ echo " "
             : # do nothing
           # otherwise, no backup exists. Create one!
           else
-            echo "no backup file exists for $file, creating backup $file.bak"
+            echo "No backup file exists for $file, creating backup $file.bak."
             cp $file $file.bak
           fi
         fi
       done
+
+      # echo an empty line for spacing
+      echo
 
       # if $filename is a directory
       if [ -d $filename ]
       then
         if [ -e $filename ]
         then
-          echo "Directory $filename found."
+          #echo "Directory $filename found."
+          backupd=$filename.bak
+          if [ -e $backupd ]
+          then
+            echo "Directory $filename has a backup $backupd."
+            echo "Moving old $backupd to $backupd-$date."
+            mv $backupd $backupd-$date
+            echo "Creating new $backupd."
+            cp -r $filename $backupd
+          else
+            echo "No backup for $filename found, creating backup $backupd."
+            cp -r $filename $backupd
+          fi
         fi
       fi
       #End Code
