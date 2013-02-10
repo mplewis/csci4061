@@ -50,7 +50,7 @@ echo " "
   3) echo "Finding zero length files"
       #here you should implement the code to find empty files
       #Begin Code
-      
+
       echo -e "\nEnter directory name: "
       read dirname
       find $dirname -size 0
@@ -65,12 +65,32 @@ echo " "
       # do something for each file in the directory
       echo -e "\nEnter directory name: "
       read dirname
+      date=`date +%m-%d-%Y`
       for file in $dirname/*
       do
         # if $file is a file and not a directory
         if [ -f $file ]
         then
-          echo "File: $file"
+          # if a backup file exists already
+          if [ -e $file.bak ]
+          then
+            echo "backup file exists for $file"
+            backup=$file.bak
+            # compare file and its backup: if diff returns nothing, files are the same
+            if diff $file $backup
+            then
+              echo "Files are the same!"
+            else
+              echo "Files are different."
+            fi
+          # if $file is a .bak file, ignore it; it's already been taken care of
+          elif [[ $file == *.bak ]]
+          then
+            echo "$file is a backup file, ignoring"
+          else
+            echo "no backup file exists for $file, creating backup"
+            cp $file $file.bak
+          fi
         fi
       done
 
