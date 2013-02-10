@@ -89,20 +89,22 @@ echo " "
             # compare file and its backup: if diff returns nothing, files are the same
             if diff $file $backup
             then
-              echo "Backup is up to date. No need to create a new backup."
+              echo "Backup of $file is up to date."
             else
-              echo "Backup differs from original file."
-              echo "Moving $backup to $backup-$date."
+              echo "Backup of $file is not up to date."
+              echo "Moving old $backup to $backup-$date."
               mv $backup $backup-$date
               echo "Creating new $backup."
               cp $file $file.bak
             fi
-          # if $file is a .bak file, ignore it; it's already been taken care of
+          # if $file is a .bak file, ignore it; it's already been taken care of by the previous case
           elif [[ $file == *.bak ]]
           then
-            echo "$file is a backup file, ignoring"
+            #echo "$file is a backup file, ignoring."
+            : # do nothing
+          # otherwise, no backup exists. Create one!
           else
-            echo "no backup file exists for $file, creating backup"
+            echo "no backup file exists for $file, creating backup $file.bak"
             cp $file $file.bak
           fi
         fi
@@ -114,4 +116,4 @@ echo " "
   5) echo "Exiting the program. Thanks"
     exit
     ;;
-   esac
+  esac
