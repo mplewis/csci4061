@@ -37,6 +37,20 @@ echo " "
   1)  echo "Searching for files"
       #here you should implement for search files
       #Begin Code
+
+      echo -e "\nEnter directory name: "
+      read dirname
+      echo -e "\nEnter file name: "
+      read filename
+
+      # if $dirname is an actual valid directory
+      if [ -d $dirname ]
+      then
+        # search for $filename in $dirname
+        find . -name $filename
+      else
+        echo "$dirname is not a valid directory!"
+      fi
       
       #End Code
       ;;
