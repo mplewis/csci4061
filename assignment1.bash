@@ -31,36 +31,49 @@ echo " "
 
   echo -e "\nEnter option "
   read option
-
-#  echo $option 
   
   case "$option" in
 
   1)  echo "Searching for files"
       #here you should implement for search files
-      # Begin Code
+      #Begin Code
       
       #End Code
       ;;
   2)  echo "Calculating total of the size of all files in the directory tree"
       #here you should implement the code to calculate the size of all files in a folder
-      # Begin Code
+      #Begin Code
       
       #End Code
       ;;
       
   3) echo "Finding zero length files"
       #here you should implement the code to find empty files
+      #Begin Code
+      
       echo -e "\nEnter directory name: "
       read dirname
       find $dirname -size 0
+      
       #End Code
       ;;
       
    4) echo  "Creating backup files"
       #here you should implement the backup code  
-      # Begin Code
-      
+      #Begin Code
+
+      # do something for each file in the directory
+      echo -e "\nEnter directory name: "
+      read dirname
+      for file in $dirname/*
+      do
+        # if $file is a file and not a directory
+        if [ -f $file ]
+        then
+          echo "File: $file"
+        fi
+      done
+
       #End Code
       ;;
       
