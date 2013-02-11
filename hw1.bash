@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------
 # CSci 4061 Spring 2013
 # Assignment# 1
-# Student name: Matthew Lewis, Chris Drews
+# Student name: Matthew Lewis, Christian Drews
 # Student id: 4237332, 4368668
 # x500 id: lewi0486, drews032
 # Operating system on which you tested your code: Linux, Unix, Solaris
@@ -38,16 +38,25 @@ echo " "
       #here you should implement for search files
       #Begin Code
 
-      echo -e "\nEnter directory name: "
+      echo -n "Enter directory name: "
       read dirname
 
       # if $dirname is an actual valid directory
       if [ -d $dirname ]
       then
-        echo -e "\nEnter file name: "
+        echo -n "Enter file name: "
         read filename
-        # search for $filename in $dirname
-        find . -name $filename
+        # make a list of $filename in $dirname
+        files=`find "$dirname" -name "$filename"`
+        for file in $files
+	do
+	  if [ -f $file ]
+	  then
+	    ls -l $file
+	  else
+	    ls -ld $file
+	  fi
+	done
       else
         echo "$dirname is not a valid directory!"
       fi
@@ -65,7 +74,7 @@ echo " "
       #here you should implement the code to find empty files
       #Begin Code
 
-      echo -e "\nEnter directory name: "
+      echo -n "Enter directory name: "
       read dirname
       find $dirname -size 0
       
@@ -77,10 +86,10 @@ echo " "
       #Begin Code
 
       # do something for each file in the directory
-      echo -e "\nEnter directory name: "
+      echo -n "Enter directory name: "
       read dirname
       # backup the following directory
-      echo -e "\nEnter file name: "
+      echo -n "Enter file name: "
       read filename
 
       # store the date string in $date
