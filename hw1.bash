@@ -40,12 +40,12 @@ echo " "
 
       echo -e "\nEnter directory name: "
       read dirname
-      echo -e "\nEnter file name: "
-      read filename
 
       # if $dirname is an actual valid directory
       if [ -d $dirname ]
       then
+        echo -e "\nEnter file name: "
+        read filename
         # search for $filename in $dirname
         find . -name $filename
       else
