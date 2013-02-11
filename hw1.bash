@@ -49,14 +49,14 @@ echo " "
         # make a list of $filename in $dirname
         files=`find "$dirname" -name "$filename"`
         for file in $files
-	do
-	  if [ -f $file ]
-	  then
-	    ls -l $file
-	  else
-	    ls -ld $file
-	  fi
-	done
+        do
+          if [ -f $file ]
+          then
+            ls -l $file
+          else
+            ls -ld $file
+          fi
+        done
       else
         echo "$dirname is not a valid directory!"
       fi
