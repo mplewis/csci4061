@@ -66,7 +66,23 @@ echo " "
   2)  echo "Calculating total of the size of all files in the directory tree"
       #here you should implement the code to calculate the size of all files in a folder
       #Begin Code
-      
+      echo -n "Enter directory name: "
+      read dirname
+      # if $dirname is an actual valid directory
+      if [ -d "$dirname" ]
+	then
+	  # fine absolute path to all files in $dirname
+	  files=`find "$dirname"`
+	  sum=0
+	  # for each file found, add size, in bytes, to $sum
+	  for file in $files
+	  do
+	      sum=$(($sum + `stat -c %s $file`))
+	  done
+	  echo $sum
+	else
+	  echo "$dirname is not a valid directory"
+      fi
       #End Code
       ;;
       
