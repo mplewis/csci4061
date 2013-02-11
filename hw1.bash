@@ -6,8 +6,8 @@
 # Student name: Matthew Lewis, Christian Drews
 # Student id: 4237332, 4368668
 # x500 id: lewi0486, drews032
-# Operating system on which you tested your code: Linux, Unix, Solaris
-# CSELABS machine: <machine you tested on eg: xyz.cselabs.umn.edu>
+# Operating system on which you tested your code: Linux
+# CSELABS machine: apollo.cselabs.umn.edu
 #---------------------------------------------------------------------
 
 echo " "
@@ -49,14 +49,14 @@ echo " "
         # make a list of $filename in $dirname
         files=`find "$dirname" -name "$filename"`
         for file in $files
-	do
-	  if [ -f $file ]
-	  then
-	    ls -l $file
-	  else
-	    ls -ld $file
-	  fi
-	done
+        do
+          if [ -f $file ]
+          then
+            ls -l $file
+          else
+            ls -ld $file
+          fi
+        done
       else
         echo "$dirname is not a valid directory!"
       fi
