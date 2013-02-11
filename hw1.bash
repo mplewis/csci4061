@@ -4,8 +4,8 @@
 # CSci 4061 Spring 2013
 # Assignment# 1
 # Student name: Matthew Lewis, Chris Drews
-# Student id: 4237332, id2
-# x500 id: lewi0486, id2
+# Student id: 4237332, 4368668
+# x500 id: lewi0486, drews032
 # Operating system on which you tested your code: Linux, Unix, Solaris
 # CSELABS machine: <machine you tested on eg: xyz.cselabs.umn.edu>
 #---------------------------------------------------------------------
