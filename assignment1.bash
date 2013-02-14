@@ -48,12 +48,16 @@ echo " "
         read filename
         # make a list of $filename in $dirname
         files=`find "$dirname" -name "$filename"`
+        # for each file
         for file in $files
         do
+          # check if it's a normal file or a directory
           if [ -f $file ]
           then
+            # if it's a normal file, do ls -l
             ls -l $file
           else
+            # otherwise, it must be a directory. do ls -ld
             ls -ld $file
           fi
         done
@@ -92,7 +96,9 @@ echo " "
 
       echo -n "Enter directory name: "
       read dirname
-      find $dirname -size 0
+
+      # self-explanatory; -size 0b finds all 0-byte files
+      find $dirname -size 0b
       
       #End Code
       ;;
@@ -154,21 +160,24 @@ echo " "
       # echo an empty line for spacing
       echo
 
-      # if $filename is a directory
+      # only copy the directory if $filename is a directory
       if [ -d $filename ]
       then
+        # check if it exists before trying to copy it
         if [ -e $filename ]
         then
-          #echo "Directory $filename found."
           backupd=$filename.bak
+          # check if a prior backup exists
           if [ -e $backupd ]
           then
+            # if it does, move the old backup and make a new one
             echo "Directory $filename has a backup $backupd."
             echo "Moving old $backupd to $backupd-$date."
             mv $backupd $backupd-$date
             echo "Creating new $backupd."
             cp -r $filename $backupd
           else
+            # otherwise, just make a backup
             echo "No backup for $filename found, creating backup $backupd."
             cp -r $filename $backupd
           fi
