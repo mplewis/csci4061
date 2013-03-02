@@ -56,14 +56,14 @@ int main(int argc, char *argv[])
     // check if directory "dirpath" exists
     int dir_exists_error = stat(dirpath, &statbuf);
     if (dir_exists_error == -1) {
-        printf("Directory does not exist, probably\n");
+        perror("Directory does not exist, probably\n");
         exit(EXIT_FAILURE);
     } else {
         printf("Directory (or file) exists, good job\n");
         if (S_ISDIR(statbuf.st_mode)) {
             printf("Is a directory! Great job\n");
         } else {
-            printf("Is not a directory. Sorry\n");
+            perror("Is not a directory. Sorry\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -71,11 +71,20 @@ int main(int argc, char *argv[])
 /* MATT IS MESSING WITH CODE HERE this is not part of the real program */
 
     // let's figure out this recursion code yo
-
-    // change directory to "dirname"
-    chdir(dirname);
+    // define the directory variable dp
+    DIR *dp;
+    if ( (dp = opendir(dirname)) == NULL) {
+        perror("Error while opening the directory\n");
+        exit(EXIT_FAILURE);
+    }
+    // define the direntry thing
+    struct dirent *direntry;
+    // and totalsum
+    int totalsum = 0;
+    // change directory to "dirpath"
+    chdir(dirpath);
     // read it and stuff? i dunno
-    while( (direntry = readdir(dp)) != NULL )
+    while( (direntry = readdir(dirpath)) != NULL )
     {
         // stat each thing into statbuf
         stat(direntry->d_name, &statbuf);
@@ -84,6 +93,8 @@ int main(int argc, char *argv[])
         {
             printf("The size of file %s is :%d bytes\n",direntry->d_name,(int) statbuf.st_size);
             totalsum += (int) statbuf.st_size;
+        } else { // it's probs a directory. this is lazy fix it
+            printf("This is probably a directory!\n");
         }
     }
 
@@ -130,6 +141,8 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+// matt is commenting out code that is causing compilation errors
+/*
 int filerecursion(char *dirpath, int choice) {
   struct stat statdata;
   DIR *dpntr;
@@ -152,27 +165,27 @@ int filerecursion(char *dirpath, int choice) {
 char *getAccessModeString ( const mode_t mode, char mstr[] ){
     sprintf(mstr, "----------");
 
-    /* Get file typeifnormation bit */
+    // Get file typeifnormation bit
     if ( S_ISLNK(mode) )   mstr[0] ='l';
     if ( S_ISDIR(mode) )   mstr[0] ='d';
     if ( S_ISCHR(mode) )   mstr[0] ='c';
     if ( S_ISBLK(mode) )   mstr[0] ='b';
  
-    /* Get user access bits         */
+    // Get user access bits
     if ( S_IRUSR & mode )  mstr[1] = 'r';
     if ( S_IWUSR & mode )  mstr[2] = 'w';
     if ( (S_IXUSR & mode) && !(S_ISUID & mode) )  mstr[3] = 'x';
     if ( !(S_IXUSR & mode) && (S_ISUID & mode) )  mstr[3] = 'S';
     if ( (S_IXUSR & mode) && (S_ISUID & mode) )  mstr[3] = 's';
 
-    /* Get group access bits         */
+    // Get group access bits
     if ( S_IRGRP & mode )  mstr[4] = 'r';
     if ( S_IWGRP & mode )  mstr[5] = 'w';
     if ( (S_IXGRP & mode) && !(S_ISGID & mode) )  mstr[6] = 'x';
     if ( !(S_IXGRP & mode) && (S_ISGID & mode) )  mstr[6] = 'S';
     if ( (S_IXGRP & mode) && (S_ISGID & mode) )  mstr[6] = 's';
 
-    /* Get other access bits         */
+    // Get other access bits
     if ( S_IROTH & mode )  mstr[7] = 'r';
     if ( S_IWOTH & mode )  mstr[8] = 'w';
     if ( (S_IXOTH & mode) && !(S_ISVTX & mode) )  mstr[9] = 'x';
@@ -180,3 +193,4 @@ char *getAccessModeString ( const mode_t mode, char mstr[] ){
     if ( (S_IXOTH & mode) && (S_ISVTX & mode) )  mstr[9] = 's';
 
 }
+*/
