@@ -3,9 +3,9 @@
  CSci 4061 Spring 2013
  Assignment# 2:   I/O Programming on UNIX/LINUX
 
- Student name: <full name of first student>   <full name of second student>
- Student ID:   <first student's ID>   (second student's ID>
- X500 id: <id1>, <id2 (optional)>
+ Student name: Christian Drews   Matthew Lewis
+ Student ID:   4368668   4237332
+ X500 id: drews032   lewi0486
 
  Operating system on which you tested your code: Linux, Unix, Solaris, MacOS
  CSELABS machine: <machine you tested on eg: xyz.cselabs.umn.edu>
@@ -47,21 +47,19 @@ int main(int argc, char *argv[])
 	/*Form a full path to the directory and check if it exists*/
 	/**********************************************************/
 
-
 	if(choice == 1){
 		printf("\nEXECUTING \"1. Find the 3 largest files in a directory\"\n");
 		/********************************************************/
 		/**************Function to perform choice 1**************/
 		/********************************************************/
-
+		filerecursion(dirpath, 1);
 	}
-
 	else if(choice == 2){
 		printf("\nEXECUTING \"2. List all zero length files in a directory\"\n");
 		/********************************************************/
 		/**************Function to perform choice 2**************/
 		/********************************************************/
-
+		filerecursion(dirpath, 2);
 	}
 
 	else if(choice == 3){
@@ -69,7 +67,7 @@ int main(int argc, char *argv[])
 		/********************************************************/
 		/**************Function to perform choice 3**************/
 		/********************************************************/
-
+		filerecursion(dirpath, 3);
 	}
 
 	else if(choice == 4){
@@ -86,4 +84,19 @@ int main(int argc, char *argv[])
 	free(input_dir_name);
 	free(dirpath);
 	return 0;
+}
+
+int filerecursion(char *dirpath, int choice) {
+  if(choice == 1) {
+  }
+  else if(choice == 2) {
+  }
+  else if(choice == 3) {
+  }
+  else if(choice == 4) {
+  }
+  else {
+    perror("Somehow you broke the program bonehead");
+    exit(100);
+  }
 }
