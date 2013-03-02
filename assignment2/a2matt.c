@@ -58,12 +58,14 @@ int main(int argc, char *argv[])
     int dir_exists_error = stat(dirpath, &dir_stat);
     if (dir_exists_error == -1) {
         printf("Directory does not exist, probably\n");
+        exit(EXIT_FAILURE);
     } else {
         printf("Directory (or file) exists, good job\n");
         if (S_ISDIR(dir_stat.st_mode)) {
             printf("Is a directory! Great job\n");
         } else {
             printf("Is not a directory. Sorry\n");
+            exit(EXIT_FAILURE);
         }
     }
 
