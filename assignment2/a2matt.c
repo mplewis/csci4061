@@ -63,7 +63,7 @@ void recurse_through_directory(char* recursepath)
             }
         }
     }
-    printf("Done with that folder \"%s\"!\n\n", recursepath);
+    printf("Done with that directory \"%s\"!\n\n", recursepath);
 }
 
 int main(int argc, char *argv[])
