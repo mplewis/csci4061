@@ -81,8 +81,6 @@ int main(int argc, char *argv[])
 
         // define the direntry thing
         struct dirent *direntry;
-        // and totalsum
-        int totalsum = 0;
         // change directory to "recursepath"
         chdir(recursepath);
 
@@ -93,18 +91,19 @@ int main(int argc, char *argv[])
         {
             // stat each thing into statbuf
             stat(direntry->d_name, &statbuf);
-            // if it's a file
+            // if it's a file...
             if (!(S_ISDIR(statbuf.st_mode))) {
+                // do stuff with the file
                 printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
-                totalsum += (int) statbuf.st_size;
             } else { // "direntry->d_name" is a directory
                 // compare directory name with "." or "..", special directories
                 if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
+                    // don't go into . and ..! that's the DANGER ZONE
                     printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
                 } else {
                     printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
+                    // convert "direntry->d_name" (relative directory) to absolute directory ("recursepath")
                     realpath(direntry->d_name, recursepath);
-                    // printf("recursepath: \"%s\"\n", recursepath);
                     recurse_through_directory(recursepath);
                 }
             }
