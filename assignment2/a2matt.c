@@ -73,10 +73,13 @@ int main(int argc, char *argv[])
     // let's figure out this recursion code yo
     // define the directory variable dp
     DIR *dp;
-    if ( (dp = opendir(dirname)) == NULL) {
+    if ( (dp = opendir(dirpath)) == NULL) {
         perror("Error while opening the directory\n");
         exit(EXIT_FAILURE);
     }
+
+    printf("Let's do this. Going through the directory now.\n\n");
+
     // define the direntry thing
     struct dirent *direntry;
     // and totalsum
@@ -84,17 +87,17 @@ int main(int argc, char *argv[])
     // change directory to "dirpath"
     chdir(dirpath);
     // read it and stuff? i dunno
-    while( (direntry = readdir(dirpath)) != NULL )
+    while( (direntry = readdir(dp)) != NULL )
     {
         // stat each thing into statbuf
         stat(direntry->d_name, &statbuf);
         // if it's a file... do shit
         if(!(S_ISDIR(statbuf.st_mode)))
         {
-            printf("The size of file %s is :%d bytes\n",direntry->d_name,(int) statbuf.st_size);
+            printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
             totalsum += (int) statbuf.st_size;
         } else { // it's probs a directory. this is lazy fix it
-            printf("This is probably a directory!\n");
+            printf("\"%s\" is a directory!\n", direntry->d_name);
         }
     }
 
