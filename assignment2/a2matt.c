@@ -56,40 +56,62 @@ int main(int argc, char *argv[])
     // check if directory "dirpath" exists
     int dir_exists_error = stat(dirpath, &statbuf);
     if (dir_exists_error == -1) {
-        printf("Directory does not exist, probably\n");
+        perror("Directory does not exist, probably\n");
         exit(EXIT_FAILURE);
     } else {
         printf("Directory (or file) exists, good job\n");
         if (S_ISDIR(statbuf.st_mode)) {
             printf("Is a directory! Great job\n");
         } else {
-            printf("Is not a directory. Sorry\n");
+            perror("Is not a directory. Sorry\n");
             exit(EXIT_FAILURE);
         }
     }
 
-/* MATT IS MESSING WITH CODE HERE this is not part of the real program 
-
-    // let's figure out this recursion code yo
-
-    // change directory to "dirname"
-    chdir(dirname);
-    // read it and stuff? i dunno
-    while( (direntry = readdir(dp)) != NULL )
+    void recurse_through_directory(char* recursepath)
     {
-        // stat each thing into statbuf
-        stat(direntry->d_name, &statbuf);
-        // if it's a file... do shit
-        if(!(S_ISDIR(statbuf.st_mode)))
-        {
-            printf("The size of file %s is :%d bytes\n",direntry->d_name,(int) statbuf.st_size);
-            totalsum += (int) statbuf.st_size;
+        // define the directory variable dp
+        DIR *dp;
+        if ( (dp = opendir(recursepath)) == NULL) {
+            perror("Error while opening the directory\n");
+            exit(EXIT_FAILURE);
         }
+
+        // define the direntry thing
+        struct dirent *direntry;
+        // change directory to "recursepath"
+        chdir(recursepath);
+
+        printf("\nLet's do this. Going through \"%s\" now.\n", recursepath);
+
+        // read the directory, item by item
+        while ((direntry = readdir(dp)) != NULL )
+        {
+            // stat each thing into statbuf
+            stat(direntry->d_name, &statbuf);
+            // if it's a file...
+            if (!(S_ISDIR(statbuf.st_mode))) {
+                // do stuff with the file
+                printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
+            } else { // "direntry->d_name" is a directory
+                // compare directory name with "." or "..", special directories
+                if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
+                    // don't go into . and ..! that's the DANGER ZONE
+                    printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
+                } else {
+                    printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
+                    // convert "direntry->d_name" (relative directory) to absolute directory ("recursepath")
+                    realpath(direntry->d_name, recursepath);
+                    recurse_through_directory(recursepath);
+                }
+            }
+        }
+        printf("Done with that folder!\n\n");
     }
 
+    recurse_through_directory(dirpath);
+    
     exit(EXIT_SUCCESS);
-
-MATT IS DONE MESSING WITH CODE NOW back to the real program */
 
 	if(choice == 1){
 		printf("\nEXECUTING \"1. Find the 3 largest files in a directory\"\n");
