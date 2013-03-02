@@ -43,9 +43,15 @@ int main(int argc, char *argv[])
     scanf("%d", &choice);
     printf("Enter a directory name in the current directory: ");
     scanf("%s", input_dir_name);
+    
     /**********************************************************/
     /*Form a full path to the directory and check if it exists*/
     /**********************************************************/
+    
+    // find the absolute path of dirpath and put it in realpath
+    realpath(input_dir_name, dirpath);
+    // debug that to stdout
+    printf("Absolute path: %s\n", dirpath);
 
 
     if(choice == 1){
