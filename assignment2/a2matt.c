@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     /*Form a full path to the directory and check if it exists*/
     /**********************************************************/
     
-    // find the absolute path of dirpath and put it in realpath
+    // find the absolute path of input_dir_name and put it in dirpath
     realpath(input_dir_name, dirpath);
     // debug that to stdout
     printf("Absolute path: %s\n", dirpath);
