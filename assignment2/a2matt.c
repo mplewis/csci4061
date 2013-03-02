@@ -25,6 +25,47 @@
 #define NAMESIZE 256
 #define TOKENSIZE 100
 
+void recurse_through_directory(char* recursepath)
+{
+    // define the directory variable dp
+    DIR *dp;
+    if ( (dp = opendir(recursepath)) == NULL) {
+        perror("Error while opening the directory\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // define the direntry thing
+    struct dirent *direntry;
+    // change directory to "recursepath"
+    chdir(recursepath);
+
+    printf("\nLet's do this. Going through \"%s\" now.\n", recursepath);
+
+    // read the directory, item by item
+    while ((direntry = readdir(dp)) != NULL )
+    {
+        // stat each thing into statbuf
+        stat(direntry->d_name, &statbuf);
+        // if it's a file...
+        if (!(S_ISDIR(statbuf.st_mode))) {
+            // do stuff with the file
+            printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
+        } else { // "direntry->d_name" is a directory
+            // compare directory name with "." or "..", special directories
+            if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
+                // don't go into . and ..! that's the DANGER ZONE
+                printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
+            } else {
+                printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
+                // convert "direntry->d_name" (relative directory) to absolute directory ("recursepath")
+                realpath(direntry->d_name, recursepath);
+                recurse_through_directory(recursepath);
+            }
+        }
+    }
+    printf("Done with that folder \"%s\"!\n\n", recursepath);
+}
+
 int main(int argc, char *argv[])
 {
     int choice = -1;
@@ -68,141 +109,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    void recurse_through_directory(char* recursepath)
-    {
-        // define the directory variable dp
-        DIR *dp;
-        if ( (dp = opendir(recursepath)) == NULL) {
-            perror("Error while opening the directory\n");
-            exit(EXIT_FAILURE);
-        }
-
-        // define the direntry thing
-        struct dirent *direntry;
-        // change directory to "recursepath"
-        chdir(recursepath);
-
-        printf("\nLet's do this. Going through \"%s\" now.\n", recursepath);
-
-        // read the directory, item by item
-        while ((direntry = readdir(dp)) != NULL )
-        {
-            // stat each thing into statbuf
-            stat(direntry->d_name, &statbuf);
-            // if it's a file...
-            if (!(S_ISDIR(statbuf.st_mode))) {
-                // do stuff with the file
-                printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
-            } else { // "direntry->d_name" is a directory
-                // compare directory name with "." or "..", special directories
-                if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
-                    // don't go into . and ..! that's the DANGER ZONE
-                    printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
-                } else {
-                    printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
-                    // convert "direntry->d_name" (relative directory) to absolute directory ("recursepath")
-                    realpath(direntry->d_name, recursepath);
-                    recurse_through_directory(recursepath);
-                }
-            }
-        }
-        printf("Done with that folder!\n\n");
-    }
-
     recurse_through_directory(dirpath);
     
     exit(EXIT_SUCCESS);
-
-	if(choice == 1){
-		printf("\nEXECUTING \"1. Find the 3 largest files in a directory\"\n");
-		/********************************************************/
-		/**************Function to perform choice 1**************/
-		/********************************************************/
-		filerecursion(dirpath, 1);
-	}
-	else if(choice == 2){
-		printf("\nEXECUTING \"2. List all zero length files in a directory\"\n");
-		/********************************************************/
-		/**************Function to perform choice 2**************/
-		/********************************************************/
-		filerecursion(dirpath, 2);
-	}
-
-	else if(choice == 3){
-		printf("\nEXECUTING \"3. Find all files with permission 777 in a directory\"\n");
-		/********************************************************/
-		/**************Function to perform choice 3**************/
-		/********************************************************/
-		filerecursion(dirpath, 3);
-	}
-
-	else if(choice == 4){
-		printf("\nEXECUTING \"4. Create a backup of a directory\"\n");
-		/********************************************************/
-		/**************Function to perform choice 4**************/
-		/********************************************************/
-	}
-
-	else{
-		printf("Invalid choice\n");
-		exit(1);
-	}
-	free(input_dir_name);
-	free(dirpath);
-	return 0;
 }
 
-int filerecursion(char *dirpath, int choice) {
-  struct stat statdata;
-  struct dirend *dentry;
-  DIR *dpntr;
-  dpntr = opendir(dirpath);
-  dentry = readdir(dpntr);
-  if(choice == 1) {
-  }
-  else if(choice == 2) {
-  }
-  else if(choice == 3) {
-   	 char accessmodes[10];
-   	 char filepathname[256];
-   	 while(dentry != 0) {
-		sprintf(filepathname, "%s", dirpath);
-   		if(!(stat(filepathname, &statdata))) {		
-    			getAccessModeString(statdata->st_uid, accessmodes);
-			if(accessmodes == "111111111") {
-				printf("File %s has permission 777", filepathname);
-			}
-    		}
-    		else {
-			fprintf(stderr, "Getting stat for %s", filepath);
-		}
-	}
-  }
-  else if(choice == 4) {
-  }
-  else {
-    perror("Somehow you broke the program bonehead");
-    exit(100);
-  }
-}
-
-char *getAccessModeString ( const mode_t mode, char mstr[] ){
-    sprintf(mstr, "---------");
- 
-    /* Get user access bits         */
-    if ( S_IRUSR & mode )  mstr[0] = '1';
-    if ( S_IWUSR & mode )  mstr[1] = '1';
-    if ( S_IXUSR & mode )  mstr[2] = '1';
-
-    /* Get group access bits         */
-    if ( S_IRGRP & mode )  mstr[3] = '1';
-    if ( S_IWGRP & mode )  mstr[4] = '1';
-    if ( S_IXGRP & mode )  mstr[5] = '1';
-
-    /* Get other access bits         */
-    if ( S_IROTH & mode )  mstr[6] = '1';
-    if ( S_IWOTH & mode )  mstr[7] = '1';
-    if ( S_IXOTH & mode )  mstr[8] = '1';
-
-}
-
+// matt nuked code because he's just working on part 4
