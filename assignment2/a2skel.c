@@ -25,6 +25,8 @@
 #define NAMESIZE 256
 #define TOKENSIZE 100
 
+#define DEBUG
+
 int main(int argc, char *argv[])
 {
 	int choice = -1;
@@ -46,6 +48,16 @@ int main(int argc, char *argv[])
 	/**********************************************************/
 	/*Form a full path to the directory and check if it exists*/
 	/**********************************************************/
+	// find the absolute path of input_dir_name and put it in dirpath
+	realpath(input_dir_name, dirpath);
+	// debug that to stdout
+	printf("Absolute path: %s\n", dirpath);
+	// check if file exists
+	stat(dirpath, &statbuf);
+	if(!(S_ISDIR(statbuf.st_mode))) {
+	  printf("The directory name is not valid. Directory does not exist");
+	    exit(1);
+	}
 
 	if(choice == 1){
 		printf("\nEXECUTING \"1. Find the 3 largest files in a directory\"\n");
@@ -87,11 +99,15 @@ int main(int argc, char *argv[])
 }
 
 int filerecursion(char *dirpath, int choice) {
+  struct stat statdata;
+  DIR *dpntr;
   if(choice == 1) {
   }
   else if(choice == 2) {
   }
   else if(choice == 3) {
+    char accessmodes[10];
+    getAccessModeString(statdata->st_uid, accessmodes);
   }
   else if(choice == 4) {
   }
@@ -99,4 +115,35 @@ int filerecursion(char *dirpath, int choice) {
     perror("Somehow you broke the program bonehead");
     exit(100);
   }
+}
+char *getAccessModeString ( const mode_t mode, char mstr[] ){
+    sprintf(mstr, "----------");
+
+    /* Get file typeifnormation bit */
+    if ( S_ISLNK(mode) )   mstr[0] ='l';
+    if ( S_ISDIR(mode) )   mstr[0] ='d';
+    if ( S_ISCHR(mode) )   mstr[0] ='c';
+    if ( S_ISBLK(mode) )   mstr[0] ='b';
+ 
+    /* Get user access bits         */
+    if ( S_IRUSR & mode )  mstr[1] = 'r';
+    if ( S_IWUSR & mode )  mstr[2] = 'w';
+    if ( (S_IXUSR & mode) && !(S_ISUID & mode) )  mstr[3] = 'x';
+    if ( !(S_IXUSR & mode) && (S_ISUID & mode) )  mstr[3] = 'S';
+    if ( (S_IXUSR & mode) && (S_ISUID & mode) )  mstr[3] = 's';
+
+    /* Get group access bits         */
+    if ( S_IRGRP & mode )  mstr[4] = 'r';
+    if ( S_IWGRP & mode )  mstr[5] = 'w';
+    if ( (S_IXGRP & mode) && !(S_ISGID & mode) )  mstr[6] = 'x';
+    if ( !(S_IXGRP & mode) && (S_ISGID & mode) )  mstr[6] = 'S';
+    if ( (S_IXGRP & mode) && (S_ISGID & mode) )  mstr[6] = 's';
+
+    /* Get other access bits         */
+    if ( S_IROTH & mode )  mstr[7] = 'r';
+    if ( S_IWOTH & mode )  mstr[8] = 'w';
+    if ( (S_IXOTH & mode) && !(S_ISVTX & mode) )  mstr[9] = 'x';
+    if ( !(S_IXOTH & mode) && (S_ISVTX & mode) )  mstr[9] = 'S';
+    if ( (S_IXOTH & mode) && (S_ISVTX & mode) )  mstr[9] = 's';
+
 }
