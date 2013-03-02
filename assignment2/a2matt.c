@@ -53,6 +53,20 @@ int main(int argc, char *argv[])
     // debug that to stdout
     printf("Absolute path: %s\n", dirpath);
 
+    // check if directory "dirpath" exists
+    struct stat dir_stat;
+    int dir_exists_error = stat(dirpath, &dir_stat);
+    if (dir_exists_error == -1) {
+        printf("Directory does not exist, probably\n");
+    } else {
+        printf("Directory (or file) exists, good job\n");
+        if (S_ISDIR(dir_stat.st_mode)) {
+            printf("Is a directory! Great job\n");
+        } else {
+            printf("Is not a directory. Sorry\n");
+        }
+    }
+
 
     if(choice == 1){
         printf("\nEXECUTING \"1. Find the 3 largest files in a directory\"\n");
