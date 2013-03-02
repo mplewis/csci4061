@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
         }
     }
 
-/* MATT IS MESSING WITH CODE HERE this is not part of the real program */
+/* MATT IS MESSING WITH CODE HERE this is not part of the real program 
 
     // let's figure out this recursion code yo
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 
     exit(EXIT_SUCCESS);
 
-/* MATT IS DONE MESSING WITH CODE NOW back to the real program */
+MATT IS DONE MESSING WITH CODE NOW back to the real program */
 
 	if(choice == 1){
 		printf("\nEXECUTING \"1. Find the 3 largest files in a directory\"\n");
@@ -132,14 +132,29 @@ int main(int argc, char *argv[])
 
 int filerecursion(char *dirpath, int choice) {
   struct stat statdata;
+  struct dirend *dentry;
   DIR *dpntr;
+  dpntr = opendir(dirpath);
+  dentry = readdir(dpntr);
   if(choice == 1) {
   }
   else if(choice == 2) {
   }
   else if(choice == 3) {
-    char accessmodes[10];
-    getAccessModeString(statdata->st_uid, accessmodes);
+   	 char accessmodes[10];
+   	 char filepathname[256];
+   	 while(dentry != 0) {
+		sprintf(filepathname, "%s", dirpath);
+   		if(!(stat(filepathname, &statdata))) {		
+    			getAccessModeString(statdata->st_uid, accessmodes);
+			if(accessmodes == "111111111") {
+				printf("File %s has permission 777", filepathname);
+			}
+    		}
+    		else {
+			fprintf(stderr, "Getting stat for %s", filepath);
+		}
+	}
   }
   else if(choice == 4) {
   }
@@ -150,33 +165,22 @@ int filerecursion(char *dirpath, int choice) {
 }
 
 char *getAccessModeString ( const mode_t mode, char mstr[] ){
-    sprintf(mstr, "----------");
-
-    /* Get file typeifnormation bit */
-    if ( S_ISLNK(mode) )   mstr[0] ='l';
-    if ( S_ISDIR(mode) )   mstr[0] ='d';
-    if ( S_ISCHR(mode) )   mstr[0] ='c';
-    if ( S_ISBLK(mode) )   mstr[0] ='b';
+    sprintf(mstr, "---------");
  
     /* Get user access bits         */
-    if ( S_IRUSR & mode )  mstr[1] = 'r';
-    if ( S_IWUSR & mode )  mstr[2] = 'w';
-    if ( (S_IXUSR & mode) && !(S_ISUID & mode) )  mstr[3] = 'x';
-    if ( !(S_IXUSR & mode) && (S_ISUID & mode) )  mstr[3] = 'S';
-    if ( (S_IXUSR & mode) && (S_ISUID & mode) )  mstr[3] = 's';
+    if ( S_IRUSR & mode )  mstr[0] = '1';
+    if ( S_IWUSR & mode )  mstr[1] = '1';
+    if ( S_IXUSR & mode )  mstr[2] = '1';
 
     /* Get group access bits         */
-    if ( S_IRGRP & mode )  mstr[4] = 'r';
-    if ( S_IWGRP & mode )  mstr[5] = 'w';
-    if ( (S_IXGRP & mode) && !(S_ISGID & mode) )  mstr[6] = 'x';
-    if ( !(S_IXGRP & mode) && (S_ISGID & mode) )  mstr[6] = 'S';
-    if ( (S_IXGRP & mode) && (S_ISGID & mode) )  mstr[6] = 's';
+    if ( S_IRGRP & mode )  mstr[3] = '1';
+    if ( S_IWGRP & mode )  mstr[4] = '1';
+    if ( S_IXGRP & mode )  mstr[5] = '1';
 
     /* Get other access bits         */
-    if ( S_IROTH & mode )  mstr[7] = 'r';
-    if ( S_IWOTH & mode )  mstr[8] = 'w';
-    if ( (S_IXOTH & mode) && !(S_ISVTX & mode) )  mstr[9] = 'x';
-    if ( !(S_IXOTH & mode) && (S_ISVTX & mode) )  mstr[9] = 'S';
-    if ( (S_IXOTH & mode) && (S_ISVTX & mode) )  mstr[9] = 's';
+    if ( S_IROTH & mode )  mstr[6] = '1';
+    if ( S_IWOTH & mode )  mstr[7] = '1';
+    if ( S_IXOTH & mode )  mstr[8] = '1';
 
 }
+
