@@ -86,18 +86,18 @@ int main(int argc, char *argv[])
     int totalsum = 0;
     // change directory to "dirpath"
     chdir(dirpath);
-    // read it and stuff? i dunno
-    while( (direntry = readdir(dp)) != NULL )
+
+    // read the directory, item by item
+    while ((direntry = readdir(dp)) != NULL )
     {
         // stat each thing into statbuf
         stat(direntry->d_name, &statbuf);
-        // if it's a file... do shit
-        if(!(S_ISDIR(statbuf.st_mode)))
-        {
+        // if it's a file
+        if (!(S_ISDIR(statbuf.st_mode))) {
             printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
             totalsum += (int) statbuf.st_size;
-        } else { // it's probs a directory. this is lazy fix it
-            printf("\"%s\" is a directory!\n", direntry->d_name);
+        } else { // "direntry->d_name" is a directory
+            printf("\"%s\" is a directory\n", direntry->d_name);
         }
     }
 
