@@ -68,6 +68,24 @@ int main(int argc, char *argv[])
         }
     }
 
+    // let's figure out this recursion code yo
+
+    // change directory to "dirname"
+    chdir(dirname);
+    // read it and stuff? i dunno
+    while( (direntry = readdir(dp)) != NULL )
+    {
+        // stat each thing into statbuf
+        stat(direntry->d_name, &statbuf);
+        // if it's a file... do shit
+        if(!(S_ISDIR(statbuf.st_mode)))
+        {
+            printf("The size of file %s is :%d bytes\n",direntry->d_name,(int) statbuf.st_size);
+            totalsum += (int) statbuf.st_size;
+        }
+    }
+
+    exit(EXIT_SUCCESS);
 
     if(choice == 1){
         printf("\nEXECUTING \"1. Find the 3 largest files in a directory\"\n");
