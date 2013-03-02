@@ -70,42 +70,46 @@ int main(int argc, char *argv[])
 
 /* MATT IS MESSING WITH CODE HERE this is not part of the real program */
 
-    // let's figure out this recursion code yo
-    // define the directory variable dp
-    DIR *dp;
-    if ( (dp = opendir(dirpath)) == NULL) {
-        perror("Error while opening the directory\n");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Let's do this. Going through the directory now.\n\n");
-
-    // define the direntry thing
-    struct dirent *direntry;
-    // and totalsum
-    int totalsum = 0;
-    // change directory to "dirpath"
-    chdir(dirpath);
-
-    // read the directory, item by item
-    while ((direntry = readdir(dp)) != NULL )
+    void recurse_through_directory(char* recursepath)
     {
-        // stat each thing into statbuf
-        stat(direntry->d_name, &statbuf);
-        // if it's a file
-        if (!(S_ISDIR(statbuf.st_mode))) {
-            printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
-            totalsum += (int) statbuf.st_size;
-        } else { // "direntry->d_name" is a directory
-            // compare directory name with "." or "..", special directories
-            if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
-                printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
-            } else {
-                printf("\"%s\" is a normal directory\n", direntry->d_name);
+        // define the directory variable dp
+        DIR *dp;
+        if ( (dp = opendir(recursepath)) == NULL) {
+            perror("Error while opening the directory\n");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Let's do this. Going through the directory now.\n\n");
+
+        // define the direntry thing
+        struct dirent *direntry;
+        // and totalsum
+        int totalsum = 0;
+        // change directory to "recursepath"
+        chdir(recursepath);
+
+        // read the directory, item by item
+        while ((direntry = readdir(dp)) != NULL )
+        {
+            // stat each thing into statbuf
+            stat(direntry->d_name, &statbuf);
+            // if it's a file
+            if (!(S_ISDIR(statbuf.st_mode))) {
+                printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
+                totalsum += (int) statbuf.st_size;
+            } else { // "direntry->d_name" is a directory
+                // compare directory name with "." or "..", special directories
+                if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
+                    printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
+                } else {
+                    printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
+                }
             }
         }
     }
 
+    recurse_through_directory(dirpath);
+    
     exit(EXIT_SUCCESS);
 
 /* MATT IS DONE MESSING WITH CODE NOW back to the real program */
