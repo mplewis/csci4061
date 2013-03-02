@@ -25,52 +25,66 @@
 #define NAMESIZE 256
 #define TOKENSIZE 100
 
-void recurse_through_directory(char* recursepath)
+char *newpath;
+struct stat statbuf;
+
+void recurse_through_directory_backup(char* recursepath)
 {
+    newpath = (char *) malloc(NAMESIZE * sizeof(char));
+
     // define the directory variable dp
     DIR *dp;
-    if ( (dp = opendir(recursepath)) == NULL) {
+    if ((dp = opendir(recursepath)) == NULL) {
         perror("Error while opening the directory\n");
         exit(EXIT_FAILURE);
     }
 
-    // define the direntry thing
-    struct dirent *direntry;
+    // define the dirent for the ORIGINAL directory
+    struct dirent *origdent;
+    // define the dirent for the BACKUP directory
+    struct dirent *backupdent;
     // change directory to "recursepath"
     chdir(recursepath);
 
     printf("\nLet's do this. Going through \"%s\" now.\n", recursepath);
 
     // read the directory, item by item
-    while ((direntry = readdir(dp)) != NULL )
+    while ((origdent = readdir(dp)) != NULL )
     {
         // stat each thing into statbuf
-        stat(direntry->d_name, &statbuf);
+        stat(origdent->d_name, &statbuf);
         // if it's a file...
         if (!(S_ISDIR(statbuf.st_mode))) {
             // do stuff with the file
-            printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
-        } else { // "direntry->d_name" is a directory
+            printf("Backing up \"%s\"\n", origdent->d_name, (int) statbuf.st_size);
+        } else { // "origdent->d_name" is a directory
             // compare directory name with "." or "..", special directories
-            if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
+            if (strcmp(origdent->d_name, ".") == 0 || strcmp(origdent->d_name, "..") == 0) {
                 // don't go into . and ..! that's the DANGER ZONE
-                printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
+                // printf("\"%s\" is a SPECIAL directory\n", origdent->d_name);
             } else {
-                printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
-                // convert "direntry->d_name" (relative directory) to absolute directory ("recursepath")
-                realpath(direntry->d_name, recursepath);
-                recurse_through_directory(recursepath);
+                printf("Backing up \"%s\" and descending..\n", origdent->d_name);
+                // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
+                realpath(origdent->d_name, recursepath);
+                recurse_through_directory_backup(recursepath);
             }
         }
     }
-    printf("Done with that directory \"%s\"!\n\n", recursepath);
+    printf("Done with that directory \"%s\"! Going up\n\n", recursepath);
+    // copy recursepath to newpath
+    strcpy(newpath, recursepath);
+    strcat(recursepath, "/..");
+    printf("I should try to get to directory \"%s\"\n", recursepath);
+    realpath(recursepath, newpath);
+    chdir(newpath);
+    printf("Now I'm in directory \"%s\"\n", newpath);
+    
 }
 
 int main(int argc, char *argv[])
 {
     int choice = -1;
     char *input_dir_name, *dirpath, *chptr;
-    struct stat statbuf;
 
     input_dir_name = (char *) malloc(NAMESIZE * sizeof(char));
     dirpath = (char *) malloc(NAMESIZE * sizeof(char));
@@ -80,8 +94,8 @@ int main(int argc, char *argv[])
     printf("3. Find all files with permission 777 in a directory\n");
     printf("4. Create a backup of a directory\n");
     printf("\n");
-    printf("ENTER YOUR CHOICE: ");
-    scanf("%d", &choice);
+    // printf("ENTER YOUR CHOICE: ");
+    // scanf("%d", &choice);
     printf("Enter a directory name in the current directory: ");
     scanf("%s", input_dir_name);
     
@@ -109,7 +123,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    recurse_through_directory(dirpath);
+    recurse_through_directory_backup(dirpath);
     
     exit(EXIT_SUCCESS);
 }
