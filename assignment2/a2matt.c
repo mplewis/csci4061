@@ -79,14 +79,14 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-        printf("Let's do this. Going through the directory now.\n\n");
-
         // define the direntry thing
         struct dirent *direntry;
         // and totalsum
         int totalsum = 0;
         // change directory to "recursepath"
         chdir(recursepath);
+
+        printf("\nLet's do this. Going through \"%s\" now.\n", recursepath);
 
         // read the directory, item by item
         while ((direntry = readdir(dp)) != NULL )
@@ -103,9 +103,13 @@ int main(int argc, char *argv[])
                     printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
                 } else {
                     printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
+                    realpath(direntry->d_name, recursepath);
+                    // printf("recursepath: \"%s\"\n", recursepath);
+                    recurse_through_directory(recursepath);
                 }
             }
         }
+        printf("Done with that folder!\n\n");
     }
 
     recurse_through_directory(dirpath);
