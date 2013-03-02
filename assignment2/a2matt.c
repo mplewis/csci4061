@@ -97,7 +97,12 @@ int main(int argc, char *argv[])
             printf("The size of file \"%s\" is %d bytes\n", direntry->d_name, (int) statbuf.st_size);
             totalsum += (int) statbuf.st_size;
         } else { // "direntry->d_name" is a directory
-            printf("\"%s\" is a directory\n", direntry->d_name);
+            // compare directory name with "." or "..", special directories
+            if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
+                printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
+            } else {
+                printf("\"%s\" is a normal directory\n", direntry->d_name);
+            }
         }
     }
 
