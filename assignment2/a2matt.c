@@ -46,40 +46,48 @@ void recurse_through_directory_backup(char* recursepath)
     // change directory to "recursepath"
     chdir(recursepath);
 
-    printf("\nLet's do this. Going through \"%s\" now.\n", recursepath);
+    printf("Going through \"%s\" now\n", recursepath);
 
     // read the directory, item by item
     while ((origdent = readdir(dp)) != NULL )
     {
-        // stat each thing into statbuf
-        stat(origdent->d_name, &statbuf);
+        // stat each thing into statbuf while checking for errors
+        if (lstat(origdent->d_name, &statbuf) == -1) {
+            perror("Error while opening the file\n");
+            exit(EXIT_FAILURE);
+        }
         // if it's a file...
-        if (!(S_ISDIR(statbuf.st_mode))) {
+        if (S_ISREG(statbuf.st_mode)) {
             // do stuff with the file
-            printf("Backing up \"%s\"\n", origdent->d_name, (int) statbuf.st_size);
+            printf("\tBacking up \"%s\"\n", origdent->d_name);
+        } else if (S_ISLNK(statbuf.st_mode)) {
+            // do stuff with the symlink
+            printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);
         } else { // "origdent->d_name" is a directory
             // compare directory name with "." or "..", special directories
             if (strcmp(origdent->d_name, ".") == 0 || strcmp(origdent->d_name, "..") == 0) {
                 // don't go into . and ..! that's the DANGER ZONE
                 // printf("\"%s\" is a SPECIAL directory\n", origdent->d_name);
             } else {
-                printf("Backing up \"%s\" and descending..\n", origdent->d_name);
+                printf("\tCreating \"%s\" and descending...\n", origdent->d_name);
                 // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
                 realpath(origdent->d_name, recursepath);
                 recurse_through_directory_backup(recursepath);
             }
         }
     }
-    printf("Done with that directory \"%s\"! Going up\n\n", recursepath);
+    printf("Done with that directory \"%s\"! Going up\n", recursepath);
+
+    // GO UP A DIRECTORY
     // copy recursepath to newpath
     strcpy(newpath, recursepath);
     strcat(recursepath, "/..");
-    printf("I should try to get to directory \"%s\"\n", recursepath);
     realpath(recursepath, newpath);
     chdir(newpath);
-    printf("Now I'm in directory \"%s\"\n", newpath);
+    printf("Now in directory \"%s\"\n", newpath);
     
 }
+
 
 int main(int argc, char *argv[])
 {
