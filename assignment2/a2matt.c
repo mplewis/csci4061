@@ -25,11 +25,11 @@
 #define NAMESIZE 256
 #define TOKENSIZE 100
 
-char *newpath;
 struct stat statbuf;
 
 void recurse_through_directory_backup(char* recursepath)
 {
+    char *newpath;
     newpath = (char *) malloc(NAMESIZE * sizeof(char));
 
     // define the directory variable dp
@@ -87,7 +87,6 @@ void recurse_through_directory_backup(char* recursepath)
     printf("Now in directory \"%s\"\n", newpath);
     
 }
-
 
 int main(int argc, char *argv[])
 {
