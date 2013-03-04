@@ -189,6 +189,8 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
                 strcpy(newbakdir, backuppath);
                 strcat(backuppath, "/");
                 strcat(backuppath, origdent->d_name);
+                // make the new directory
+                mkdir(backuppath, 0755);
                 // keep going through the folder
                 printf("\tNew backup path: \"%s\"\n", backuppath);
                 recurse_through_directory_backup(recursepath, backuppath);
