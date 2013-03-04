@@ -165,9 +165,11 @@ int make_backup_directory(char *backupsrc) {
             printf("Renaming old backup %s to %s", backupdest, backupold);
             
             // make the new backup directory already!
+            // rename mydir.bak to mydir.bak-DATE
             rename(backupdest, backupold);
+            // create mydir.bak from scratch
             printf("NOW creating new backup folder %s.", backupdest);
-            errcreate = mkdir(backupdest, 0755);
+            mkdir(backupdest, 0755);
             if (errcreate != 0) {
                 printf("Unknown error while creating %s.", backupdest);
             } else {
