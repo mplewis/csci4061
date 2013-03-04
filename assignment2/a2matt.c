@@ -25,16 +25,41 @@
 #define NAMESIZE 256
 #define TOKENSIZE 100
 
-char *file1, *file2, *file3;
-int size1, size2, size3;
+char *file1 = 0;
+char *file2 = 0;
+char *file3 = 0;
+int size1 = 0;
+int size2 = 0;
+int size3 = 0;
+char accessmodes[10];
 struct stat statbuf;
 
+char *getAccessModeString ( const mode_t mode, char mstr[] ){
+    sprintf(mstr, "---------");
+ 
+    /* Get user access bits         */
+    if ( S_IRUSR & mode )  mstr[0] = '1';
+    if ( S_IWUSR & mode )  mstr[1] = '1';
+    if ( S_IXUSR & mode )  mstr[2] = '1';
+
+    /* Get group access bits         */
+    if ( S_IRGRP & mode )  mstr[3] = '1';
+    if ( S_IWGRP & mode )  mstr[4] = '1';
+    if ( S_IXGRP & mode )  mstr[5] = '1';
+
+    /* Get other access bits         */
+    if ( S_IROTH & mode )  mstr[6] = '1';
+    if ( S_IWOTH & mode )  mstr[7] = '1';
+    if ( S_IXOTH & mode )  mstr[8] = '1';
+
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////bye.c, hellolink, hello.c, xlink, y
     void recurse_through_directory(char* recursepath, int choice)
     {
         // define the directory variable dp
         DIR *dp;
         if ( (dp = opendir(recursepath)) == NULL) {
-            perror("Error while opening the directory\n");
+            perror("ERROR: Unable to open directory\n");
             exit(EXIT_FAILURE);
         }
 
@@ -43,21 +68,17 @@ struct stat statbuf;
         // change directory to "recursepath"
         chdir(recursepath);
 
-        printf("\nLet's do this. Going through \"%s\" now.\n", recursepath);
-
         // read the directory, item by item
         while ((direntry = readdir(dp)) != NULL )
         {
             // stat each thing into statbuf
-            stat(direntry->d_name, &statbuf);
+            lstat(direntry->d_name, &statbuf);
             // if it's a file...
             if (!(S_ISDIR(statbuf.st_mode))) {
                 // do stuff with the file
-
 		char *filepath;
   		filepath = (char *) malloc(NAMESIZE * sizeof(char));
 		realpath(direntry->d_name, filepath);
-
 		if(choice == 1) {
 			if(statbuf.st_size > size1) {
 				file3 = file2;
@@ -83,22 +104,12 @@ struct stat statbuf;
 		    printf("The size of file \"%s\" is %d bytes\n", filepath, statbuf.st_size);
 		  }
   		}
-  		else if(choice == 3) {/*
-   	 	char accessmodes[10];
-   	 	char filepathname[256];
-   	 		while(dentry != 0) {
-				sprintf(filepathname, "%s", dirpath);
-   				if(!(stat(filepathname, &statdata))) {		
-    				getAccessModeString(statdata->st_uid, accessmodes);
-					if(accessmodes == "111111111") {
-						printf("File %s has permission 777", filepathname);
-					}
-    				}
-    				else {
-					fprintf(stderr, "Getting stat for %s", filepath);
-				}
+  		else if(choice == 3) {
+   	 		getAccessModeString(statbuf.st_mode, accessmodes);
+			if(strcmp(accessmodes, "111111111") == 0) {
+				printf("The permission of file \"%s\" is 777\n", filepath);
 			}
-  	*/	}
+  		}
   		else if(choice == 4) {
  		}
 
@@ -107,16 +118,14 @@ struct stat statbuf;
                 // compare directory name with "." or "..", special directories
                 if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0) {
                     // don't go into . and ..! that's the DANGER ZONE
-                    printf("\"%s\" is a SPECIAL directory\n", direntry->d_name);
                 } else {
-                    printf("\"%s\" is a normal directory, descending into it\n", direntry->d_name);
                     // convert "direntry->d_name" (relative directory) to absolute directory ("recursepath")
                     realpath(direntry->d_name, recursepath);
                     recurse_through_directory(recursepath, choice);
                 }
             }
         }
-        printf("Done with that folder!\n\n");
+	chdir("..");
     }
 
 int main(int argc, char *argv[])
@@ -149,15 +158,13 @@ int main(int argc, char *argv[])
     // check if directory "dirpath" exists
     int dir_exists_error = stat(dirpath, &statbuf);
     if (dir_exists_error == -1) {
-        perror("Directory does not exist, probably\n");
+        perror("ERROR: Directory does not exist\n");
         exit(EXIT_FAILURE);
     } 
     else {
-        printf("Directory (or file) exists, good job\n");
         if (S_ISDIR(statbuf.st_mode)) {
-            printf("Is a directory! Great job\n");
         } else {
-            perror("Is not a directory. Sorry\n");
+            perror("ERROR: Path is not a directory\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -202,25 +209,5 @@ int main(int argc, char *argv[])
 	free(input_dir_name);
 	free(dirpath);
 	return 0;
-}
-
-char *getAccessModeString ( const mode_t mode, char mstr[] ){
-    sprintf(mstr, "---------");
- 
-    /* Get user access bits         */
-    if ( S_IRUSR & mode )  mstr[0] = '1';
-    if ( S_IWUSR & mode )  mstr[1] = '1';
-    if ( S_IXUSR & mode )  mstr[2] = '1';
-
-    /* Get group access bits         */
-    if ( S_IRGRP & mode )  mstr[3] = '1';
-    if ( S_IWGRP & mode )  mstr[4] = '1';
-    if ( S_IXGRP & mode )  mstr[5] = '1';
-
-    /* Get other access bits         */
-    if ( S_IROTH & mode )  mstr[6] = '1';
-    if ( S_IWOTH & mode )  mstr[7] = '1';
-    if ( S_IXOTH & mode )  mstr[8] = '1';
-
 }
 
