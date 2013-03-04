@@ -123,12 +123,7 @@ void recurse_through_directory_backup(char* recursepath)
     printf("Done with that directory \"%s\"! Going up\n", recursepath);
 
     // GO UP A DIRECTORY
-    // copy recursepath to newpath
-    strcpy(newpath, recursepath);
-    strcat(recursepath, "/..");
-    realpath(recursepath, newpath);
-    chdir(newpath);
-    printf("Now in directory \"%s\"\n", newpath);
+    // add code here
 }
 
 int main(int argc, char *argv[])
