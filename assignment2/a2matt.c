@@ -155,6 +155,7 @@ char *file3 = 0;
 int size1 = 0;
 int size2 = 0;
 int size3 = 0;
+char linkcheck = 0;
 char accessmodes[10];
 struct stat statbuf;
 
@@ -193,83 +194,97 @@ void recurse_through_directory(char* recursepath, int choice)
   struct dirent *direntry;
   // Move into next folder in directory tree
   chdir(recursepath);
-
+  
   // Read each directory item
   while ((direntry = readdir(dp)) != NULL )
     {
       // Store each stat structure in statbuf
       lstat(direntry->d_name, &statbuf);
       // Check if item is not a directory
-      if (!(S_ISDIR(statbuf.st_mode))) {
-	char *filepath;
-	filepath = (char *) malloc(NAMESIZE * sizeof(char));
-	// Determine absolute path to item
-	realpath(direntry->d_name, filepath);
-	// If first option is selected
-	if(choice == 1)
-	  {
-	    // Check to see if current item is largest thus far
-	    if(statbuf.st_size > size1)
-	      {
-		file3 = file2;
-		file2 = file1;
-		file1 = filepath;
-		size3 = size2;
-		size2 = size1;
-		size1 = statbuf.st_size;
-	      }
-	    // Check to see if current item is second largest thus far
-	    else if(statbuf.st_size > size2)
-	      {
-		file3 = file2;
-		file2 = filepath;
-		size3 = size2;
-		size2 = statbuf.st_size;
-	      }
-	    // Check to see if current item is third largest thus far
-	    else if(statbuf.st_size > size3)
-	      {
-	      file3 = filepath;
-	      size3 = statbuf.st_size;
-	      }
-	    // Else ignore item
-	  }
-	// If second option is selected
-	else if(choice == 2)
-	  {
-	    // Check to see if file size is 0 bytes
-	    if(statbuf.st_size == 0)
-	      {
-	      printf("The size of file \"%s\" is %d bytes\n", filepath, statbuf.st_size);
-	      }
-	  }
-	// If third option is selected
-	else if(choice == 3)
-	  {
-	    // Determine permission of current item
-	    getAccessModeString(statbuf.st_mode, accessmodes);
-	    // Check to see if current item has permission 777
-	    if(strcmp(accessmodes, "111111111") == 0) {
-	      printf("The permission of file \"%s\" is 777\n", filepath);
+      if (!(S_ISDIR(statbuf.st_mode)))
+	{
+	  char *filepath;
+	  filepath = (char *) malloc(NAMESIZE * sizeof(char));
+	  linkcheck = 0;
+	  // Check if item is a symbolic link
+	  if (S_ISLNK(statbuf.st_mode))
+	    {
+	      linkcheck = 1;
 	    }
-	  }
-	// If the fourth item is selected
-	else if(choice == 4)
-	  {
+	  // Determine absolute path to item
+	  realpath(direntry->d_name, filepath);
+	  // If first option is selected
+	  if(choice == 1)
+	    {
+	      // Check to see if current item is largest thus far
+	      if(statbuf.st_size > size1)
+		{
+		  file3 = file2;
+		  file2 = file1;
+		  file1 = filepath;
+		  size3 = size2;
+		  size2 = size1;
+		  size1 = statbuf.st_size;
+		}
+	      // Check to see if current item is second largest thus far
+	      else if(statbuf.st_size > size2)
+		{
+		  file3 = file2;
+		  file2 = filepath;
+		  size3 = size2;
+		  size2 = statbuf.st_size;
+		}
+	      // Check to see if current item is third largest thus far
+	      else if(statbuf.st_size > size3)
+		{
+		  file3 = filepath;
+		  size3 = statbuf.st_size;
+		}
+	      // Else ignore item
+	    }
+	  // If second option is selected
+	  else if(choice == 2)
+	    {
+	      // Check to see if file size is 0 bytes
+	      if(statbuf.st_size == 0)
+		{
+		  printf("The size of file \"%s\" is %d bytes\n", filepath, statbuf.st_size);
+		}
+	    }
+	  // If third option is selected
+	  else if(choice == 3)
+	    {
+	      // Determine permission of current item
+	      getAccessModeString(statbuf.st_mode, accessmodes);
+	      // Check to see if current item has permission 777
+	      if(strcmp(accessmodes, "111111111") == 0) {
+		if(linkcheck == 0)
+		  {
+		    printf("The permission of file \"%s\" is 777\n", filepath);
+		  }
+		else
+		  {
+		    printf("The permission of link \"%s\", pointing to \"%s\" is 777\n", direntry->d_name, filepath);
+		  }
+	      }
+	    }
+	  // If the fourth item is selected
+	  else if(choice == 4)
+	    {
+	    }
+	  
 	}
-
-      }
       // Current item is a directory
       else
-	{ //
+	{
 	  // Compare directory name with "." or "..", special directories
 	  if (strcmp(direntry->d_name, ".") == 0 || strcmp(direntry->d_name, "..") == 0)
 	    {
-	    // Ignore directories "." and ".."
+	      // Ignore directories "." and ".."
 	    }
 	  else
 	    {
-	    // Determine absolute path to directory
+	      // Determine absolute path to directory
 	      realpath(direntry->d_name, recursepath);
 	      recurse_through_directory(recursepath, choice);
 	    }
