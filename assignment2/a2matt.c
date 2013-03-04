@@ -26,12 +26,13 @@
 #include <dirent.h>
 #define NAMESIZE 256
 #define BUFSIZE 256
+#define PATHSIZE 1024
 #define TOKENSIZE 100
 
 struct stat statbuf;
 
-// get current time in the format 'Mar-03-2013-20-24-04' and place it in
-// 'buffer' with a max length of 'bufsize'
+// get current date and time in the format 'Mar-03-2013-20-24-04' and place it
+// in 'buffer' with a max length of 'bufsize'
 void time_to_buf(char* buffer, int bufsize)
 {
     char* datetime;
@@ -41,6 +42,33 @@ void time_to_buf(char* buffer, int bufsize)
     time (&clocktime);
     timeinfo = localtime( &clocktime );
     strftime(buffer, bufsize, "%b-%d-%Y-%H-%M-%S", timeinfo); 
+}
+
+// change directory to 'changeto', store current directory in 'newpath'
+// (with max len 'buflen')
+int change_dir(char* changeto, char* newpath, int buflen) {
+    if ((chdir(changeto)) == 0) {
+        if (getcwd(newpath, buflen)) {
+            return 0;
+        } else {
+            return -2;
+        }
+    }
+    else  { 
+        return -1;
+    }  
+}
+
+// create directory 'makedir' with permissions 'perms'
+int create_dir (char* makedir, mode_t perms) {
+    // mode_t perms = 0775;
+
+    if ((mkdir(makedir, perms)) == 0) {
+        return 0;
+    } else {
+        perror("Error in directory creation");
+        return -1;
+    }
 }
 
 void recurse_through_directory_backup(char* recursepath)
@@ -101,14 +129,23 @@ void recurse_through_directory_backup(char* recursepath)
     realpath(recursepath, newpath);
     chdir(newpath);
     printf("Now in directory \"%s\"\n", newpath);
-    
 }
 
 int main(int argc, char *argv[])
 {
+    /*
     char buffer[BUFSIZE];
     time_to_buf(buffer, BUFSIZE);
     printf("Current date and time is: %s\n", buffer);
+
+    char currpath[PATHSIZE];
+    getcwd(currpath, PATHSIZE);
+    printf("%s\n", currpath);
+    change_dir("..", currpath, PATHSIZE);
+    printf("%s\n", currpath);
+    
+    create_dir("NEW_DIR", 0775);
+    */
 
     int choice = -1;
     char *input_dir_name, *dirpath, *chptr;
