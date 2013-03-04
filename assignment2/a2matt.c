@@ -21,9 +21,133 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
+#include <time.h>
 #include <dirent.h>
+#include <errno.h>
 #define NAMESIZE 256
+#define BUFSIZE 256
+#define PATHSIZE 1024
 #define TOKENSIZE 100
+#define BACKUP_SUFFIX ".bak"
+
+struct stat statbuf;
+
+// get current date and time in the format 'Mar-03-2013-20-24-04' and place it
+// in 'buffer' with a max length of 'bufsize'
+void time_to_buf(char* buffer, int bufsize)
+{
+    char* datetime;
+    int retval;
+    time_t clocktime;
+    struct tm *timeinfo;
+    time (&clocktime);
+    timeinfo = localtime( &clocktime );
+    strftime(buffer, bufsize, "%b-%d-%Y-%H-%M-%S", timeinfo); 
+}
+
+// change directory to 'changeto', store current directory in 'newpath'
+// (with max len 'bufsize')
+int change_dir(char* changeto, char* newpath, int bufsize) {
+    if ((chdir(changeto)) == 0) {
+        if (getcwd(newpath, bufsize)) {
+            return 0;
+        } else {
+            return -2;
+        }
+    }
+    else  { 
+        return -1;
+    }  
+}
+
+// create a symbolic link at 'linksrc' pointing to 'linkdest'.
+// mind the argument order!
+int create_symlink(char* linkdest, char* linksrc)
+{
+    int status;
+    status = symlink(linkdest, linksrc);
+    return status;
+}
+
+int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
+{
+    int retval = 0;
+    // readlink will obtain and store the link information in linkinfo array
+    // returns the number of bytes to retval, or -1 if error
+    retval = readlink(symlinkpath, linkinfo, bufsize);
+    printf("%i\n", retval);
+    if (retval == -1) {
+        // symlink info error
+        return -1;
+    } else {
+        // append the null that readlink doesn't
+        linkinfo[retval] = '\0';
+        return 0;
+    }
+}
+
+void recurse_through_directory_backup(char* recursepath)
+{
+    // define the directory variable dp
+    DIR *dp;
+    if ((dp = opendir(recursepath)) == NULL) {
+        perror("Error while opening the directory\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // define the dirent for the ORIGINAL directory
+    struct dirent *origdent;
+    // define the dirent for the BACKUP directory
+    struct dirent *backupdent;
+    // change directory to "recursepath"
+    chdir(recursepath);
+
+    printf("Going through \"%s\" now\n", recursepath);
+
+    // read the directory, item by item
+    while ((origdent = readdir(dp)) != NULL )
+    {
+        // stat each thing into statbuf while checking for errors
+        if (lstat(origdent->d_name, &statbuf) == -1) {
+            perror("Error while opening the file\n");
+            exit(EXIT_FAILURE);
+        }
+        // if it's a file...
+        if (S_ISREG(statbuf.st_mode)) {
+            // do stuff with the file
+            printf("\tBacking up \"%s\"\n", origdent->d_name);
+        } else if (S_ISLNK(statbuf.st_mode)) {
+            // do stuff with the symlink
+            printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);
+        } else { // "origdent->d_name" is a directory
+            // compare directory name with "." or "..", special directories
+            if (strcmp(origdent->d_name, ".") == 0 || strcmp(origdent->d_name, "..") == 0) {
+                // don't go into . and ..! that's the DANGER ZONE
+                // printf("\"%s\" is a SPECIAL directory\n", origdent->d_name);
+            } else {
+                printf("\tCreating \"%s\" and descending...\n", origdent->d_name);
+                // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
+                realpath(origdent->d_name, recursepath);
+                recurse_through_directory_backup(recursepath);
+            }
+        }
+    }
+    printf("Done with that directory \"%s\"! Going up\n", recursepath);
+
+    // GO UP A DIRECTORY
+    change_dir("..", recursepath, PATHSIZE);
+    printf("Current directory: \"%s\"\n", recursepath);
+}
+
+int make_backup_directory(char *backupsrc) {
+    char* backupdest;
+    backupdest = (char*) malloc(PATHSIZE * sizeof(char));
+
+    printf("Backing up %s\n", backupsrc);
+    
+
+}
 
 char *file1 = 0;
 char *file2 = 0;
@@ -52,7 +176,6 @@ char *getAccessModeString ( const mode_t mode, char mstr[] )
   if ( S_IROTH & mode )  mstr[6] = '1';
   if ( S_IWOTH & mode )  mstr[7] = '1';
   if ( S_IXOTH & mode )  mstr[8] = '1';
-
 }
 
 void recurse_through_directory(char* recursepath, int choice)
@@ -247,4 +370,3 @@ int main(int argc, char *argv[])
     free(dirpath);
     return 0;
 }
-
