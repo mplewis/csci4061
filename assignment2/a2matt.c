@@ -26,6 +26,8 @@
 #include <time.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+
 #define NAMESIZE 256
 #define BUFSIZE 256
 #define DATESIZE 128
@@ -88,6 +90,42 @@ int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
     }
 }
 
+int copy_file(char* srcfile, char* destfile)
+{
+    char cpbuffer[BUFSIZE];
+    ssize_t count;
+    mode_t perms;
+    int fdin, fdout;
+
+    if  ((fdin = open(srcfile, O_RDONLY)) == -1) {
+        perror("Error opening the input file:");
+        return 1;
+    }
+    /*    printf( "Input file opened with descriptor %d \n", fdin);  */
+ 
+    if  ((fdout = open(destfile, (O_WRONLY | O_CREAT), perms)) == -1 ) {
+        perror("Error creating the output file");
+        return 2;
+    }
+    /*    printf( "Output file opened with descriptor %d \n", fdout);  */
+   
+    while ((count=read(fdin, cpbuffer, BUFSIZE)) > 0) {
+        if (write(fdout, cpbuffer, count) != count) { 
+            perror("Error writing");
+            return 3;
+        }
+    } 
+
+    if (count == -1) {
+        perror("Error reading the input file");
+        return 4;
+    }
+
+    close(fdin);
+    close(fdout);
+    return 0;
+}
+
 // recurse through all directories to back them up in step 4.
 // takes a source (recursepath) and a destination (backuppath)
 void recurse_through_directory_backup(char* recursepath, char* backuppath)
@@ -133,6 +171,8 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
             strcat(destfile, "/");
             strcat(destfile, origdent->d_name);
             printf("\tBacking up \"%s\"\n\t        to \"%s\"\n", srcfile, destfile);
+            int cpresult = copy_file(srcfile, destfile);
+            printf("\tCopy result: %i\n", cpresult);
         } else if (S_ISLNK(statbuf.st_mode)) {
             // do stuff with the symlink
             printf("\tBacking up (SYMLINK) \"%s\"\n", origdent->d_name);
@@ -160,8 +200,7 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
     // GO UP A DIRECTORY, both in the source and destination directory pointers
     change_dir("..", recursepath, PATHSIZE);
     // printf("\tNow exploring: \"%s\"\n", recursepath);
-    chdir(backuppath);
-    change_dir("..", backuppath, PATHSIZE);
+    strcat(backuppath, "/..");
     // printf("\tNow backing up to: \"%s\"\n", backuppath);
 }
 
