@@ -24,10 +24,12 @@
 #include <sys/time.h>
 #include <time.h>
 #include <dirent.h>
+#include <errno.h>
 #define NAMESIZE 256
 #define BUFSIZE 256
 #define PATHSIZE 1024
 #define TOKENSIZE 100
+#define BACKUP_SUFFIX ".bak"
 
 struct stat statbuf;
 
@@ -45,10 +47,10 @@ void time_to_buf(char* buffer, int bufsize)
 }
 
 // change directory to 'changeto', store current directory in 'newpath'
-// (with max len 'buflen')
-int change_dir(char* changeto, char* newpath, int buflen) {
+// (with max len 'bufsize')
+int change_dir(char* changeto, char* newpath, int bufsize) {
     if ((chdir(changeto)) == 0) {
-        if (getcwd(newpath, buflen)) {
+        if (getcwd(newpath, bufsize)) {
             return 0;
         } else {
             return -2;
@@ -59,18 +61,6 @@ int change_dir(char* changeto, char* newpath, int buflen) {
     }  
 }
 
-// create directory 'makedir' with permissions 'perms'
-int create_dir (char* makedir, mode_t perms) {
-    // mode_t perms = 0775;
-
-    if ((mkdir(makedir, perms)) == 0) {
-        return 0;
-    } else {
-        perror("Error in directory creation");
-        return -1;
-    }
-}
-
 // create a symbolic link at 'linksrc' pointing to 'linkdest'.
 // mind the argument order!
 int create_symlink(char* linkdest, char* linksrc)
@@ -78,6 +68,23 @@ int create_symlink(char* linkdest, char* linksrc)
     int status;
     status = symlink(linkdest, linksrc);
     return status;
+}
+
+int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
+{
+    int retval = 0;
+    // readlink will obtain and store the link information in linkinfo array
+    // returns the number of bytes to retval, or -1 if error
+    retval = readlink(symlinkpath, linkinfo, bufsize);
+    printf("%i\n", retval);
+    if (retval == -1) {
+        // symlink info error
+        return -1;
+    } else {
+        // append the null that readlink doesn't
+        linkinfo[retval] = '\0';
+        return 0;
+    }
 }
 
 void recurse_through_directory_backup(char* recursepath)
@@ -133,6 +140,15 @@ void recurse_through_directory_backup(char* recursepath)
     printf("Current directory: \"%s\"\n", recursepath);
 }
 
+int make_backup_directory(char *backupsrc) {
+    char* backupdest;
+    backupdest = (char*) malloc(PATHSIZE * sizeof(char));
+
+    printf("Backing up %s\n", backupsrc);
+    
+
+}
+
 int main(int argc, char *argv[])
 {
     /*
@@ -146,9 +162,19 @@ int main(int argc, char *argv[])
     change_dir("..", currpath, PATHSIZE);
     printf("%s\n", currpath);
     
-    create_dir("NEW_DIR", 0775);
+    int err = mkdir("testdir2", 0775);
+    if (err) {
+        printf("%i: %s\n", err, strerror(errno));
+    }
 
     create_symlink("test.sh", "sym_link_test.sh");
+
+    char *linkout;
+    linkout = (char *) malloc(PATHSIZE * sizeof(char));
+    get_symlink_dest("LINK_TO_MATT.sh", linkout, PATHSIZE);
+    printf("%s\n", linkout);
+
+    rename("testdir", "testdir_bak");
     */
 
     int choice = -1;
@@ -162,8 +188,8 @@ int main(int argc, char *argv[])
     printf("3. Find all files with permission 777 in a directory\n");
     printf("4. Create a backup of a directory\n");
     printf("\n");
-    // printf("ENTER YOUR CHOICE: ");
-    // scanf("%d", &choice);
+    printf("ENTER YOUR CHOICE: ");
+    scanf("%d", &choice);
     printf("Enter a directory name in the current directory: ");
     scanf("%s", input_dir_name);
     
@@ -190,6 +216,10 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
+
+    make_backup_directory(dirpath);
+
+    exit(EXIT_SUCCESS);
 
     recurse_through_directory_backup(dirpath);
     

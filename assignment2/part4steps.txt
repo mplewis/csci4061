@@ -14,5 +14,7 @@ BACKUP STEPS (for 'mydir'):
 WHAT'S DONE:
     datetime->buf function (time_to_buf)
     change directories (change_dir)
-    create directories (create_dir)
+    create directories (mkdir() built-in)
     create symbolic links (create_symlink)
+    get symlink destination (get_symlink_dest)
+    rename file/folder (rename() built-in)
