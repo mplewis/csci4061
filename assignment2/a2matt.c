@@ -32,8 +32,6 @@
 #define TOKENSIZE 100
 #define BACKUP_SUFFIX ".bak"
 
-struct stat statbuf;
-
 // get current date and time in the format 'Mar-03-2013-20-24-04' and place it
 // in 'buffer' with a max length of 'bufsize'
 void time_to_buf(char* buffer, int bufsize)
