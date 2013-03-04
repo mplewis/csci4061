@@ -124,10 +124,18 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
         // if it's a file...
         if (S_ISREG(statbuf.st_mode)) {
             // do stuff with the file
-            printf("\tBacking up \"%s\"\n", origdent->d_name);
+            // put "mydir/myfile" into "srcfile"
+            strcpy(srcfile, recursepath);
+            strcat(srcfile, "/");
+            strcat(srcfile, origdent->d_name);
+            // put "mydir.bak/myfile" into "destfile"
+            strcpy(destfile, backuppath);
+            strcat(destfile, "/");
+            strcat(destfile, origdent->d_name);
+            printf("\tBacking up \"%s\"\n\t        to \"%s\"\n", srcfile, destfile);
         } else if (S_ISLNK(statbuf.st_mode)) {
             // do stuff with the symlink
-            printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);
+            printf("\tBacking up (SYMLINK) \"%s\"\n", origdent->d_name);
         } else { // "origdent->d_name" is a directory
             // compare directory name with "." or "..", special directories
             if (strcmp(origdent->d_name, ".") == 0 || strcmp(origdent->d_name, "..") == 0) {
