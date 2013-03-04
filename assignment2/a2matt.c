@@ -14,6 +14,8 @@
 
 ***********************************************************************************************/
 
+// NOTE: We know this code is non functional for part 4 and intend to submit a fixed version within 24 hours. Thank you.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
