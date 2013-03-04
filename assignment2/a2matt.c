@@ -73,9 +73,6 @@ int create_dir (char* makedir, mode_t perms) {
 
 void recurse_through_directory_backup(char* recursepath)
 {
-    char *newpath;
-    newpath = (char *) malloc(NAMESIZE * sizeof(char));
-
     // define the directory variable dp
     DIR *dp;
     if ((dp = opendir(recursepath)) == NULL) {
@@ -123,7 +120,8 @@ void recurse_through_directory_backup(char* recursepath)
     printf("Done with that directory \"%s\"! Going up\n", recursepath);
 
     // GO UP A DIRECTORY
-    // add code here
+    change_dir("..", recursepath, PATHSIZE);
+    printf("Current directory: \"%s\"\n", recursepath);
 }
 
 int main(int argc, char *argv[])
@@ -146,7 +144,7 @@ int main(int argc, char *argv[])
     char *input_dir_name, *dirpath, *chptr;
 
     input_dir_name = (char *) malloc(NAMESIZE * sizeof(char));
-    dirpath = (char *) malloc(NAMESIZE * sizeof(char));
+    dirpath = (char *) malloc(PATHSIZE * sizeof(char));
     printf("SELECT THE FUNCTION YOU WANT TO EXECUTE:\n");
     printf("1. Find the 3 largest files in a directory\n");
     printf("2. List all zero length files in a directory\n");
