@@ -89,6 +89,10 @@ int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
 void recurse_through_directory_backup(char* recursepath, char* backuppath)
 {
     // define strings for source file and dest file
+    char *srcfile, *destfile, *newbakdir;
+    srcfile = (char *) malloc(PATHSIZE * sizeof(char));
+    destfile = (char *) malloc(PATHSIZE * sizeof(char));
+    newbakdir = (char *) malloc(PATHSIZE * sizeof(char));
 
     // define the directory variable dp
     DIR *dp;
@@ -103,6 +107,7 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
     chdir(recursepath);
 
     printf("Going through \"%s\" now\n", recursepath);
+    printf("\tCurrent backup dir: \"%s\"\n", backuppath);
 
     // read the directory, item by item
     while ((origdent = readdir(dp)) != NULL )
@@ -128,15 +133,24 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
                 printf("\tCreating \"%s\" and descending...\n", origdent->d_name);
                 // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
                 realpath(origdent->d_name, recursepath);
+                // append the new path to the backup path
+                strcpy(newbakdir, backuppath);
+                strcat(backuppath, "/");
+                strcat(backuppath, origdent->d_name);
+                // keep going through the folder
+                printf("\tNew backup path: \"%s\"\n", backuppath);
                 recurse_through_directory_backup(recursepath, backuppath);
             }
         }
     }
     printf("Done with directory \"%s\"! Going up\n", recursepath);
 
-    // GO UP A DIRECTORY
+    // GO UP A DIRECTORY, both in the source and destination directory pointers
     change_dir("..", recursepath, PATHSIZE);
-    printf("Current directory: \"%s\"\n", recursepath);
+    // printf("\tNow exploring: \"%s\"\n", recursepath);
+    chdir(backuppath);
+    change_dir("..", backuppath, PATHSIZE);
+    // printf("\tNow backing up to: \"%s\"\n", backuppath);
 }
 
 int make_backup_directory(char *backupsrc, char *backupfolderout) {
@@ -177,7 +191,7 @@ int make_backup_directory(char *backupsrc, char *backupfolderout) {
             printf("Creating new backup folder %s.\n", backupdest);
             mkdir(backupdest, 0755);
             printf("%s created successfully.\n", backupdest);
-            strcpy(backupdest, backupfolderout);
+            strcpy(backupfolderout, backupdest);
             return 0;
         } else {
             printf("Unknown error while creating %s.\n", backupdest);
@@ -403,7 +417,9 @@ int main(int argc, char *argv[])
 
         char *backuppath;
         backuppath = (char *) malloc(PATHSIZE * sizeof(char));
+        printf("%s\n", backuppath);
         make_backup_directory(dirpath, backuppath);
+        printf("%s\n", backuppath);
         printf("\nNOTE: This function does not actually do anything because we ran out of time to complete part 4. However, here's the recursion to show how it would backup files and recurse through the directories.\n\n");
         recurse_through_directory_backup(dirpath, backuppath);
     }
