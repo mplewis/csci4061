@@ -7,10 +7,10 @@
  Student ID:   4368668   4237332
  X500 id: drews032   lewi0486
 
- Operating system on which you tested your code: Linux, Unix, Solaris, MacOS
- CSELABS machine: <machine you tested on eg: xyz.cselabs.umn.edu>
+ Operating system on which you tested your code: Linux
+ CSELABS machine: apollo.cselabs.umn.edu
 
- GROUP INSTRUCTION:  Please make only ONLY one  submission when working in a group.
+ GROUP INSTRUCTION:  Please make only ONLY one submission when working in a group.
 
 ***********************************************************************************************/
 
@@ -86,6 +86,8 @@ int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
     }
 }
 
+// recurse through all directories to back them up in step 4.
+// takes a source (recursepath) and a destination (backuppath)
 void recurse_through_directory_backup(char* recursepath, char* backuppath)
 {
     // define strings for source file and dest file
@@ -202,6 +204,7 @@ int make_backup_directory(char *backupsrc, char *backupfolderout) {
 
 }
 
+// get access mode string from mode
 char *getAccessModeString ( const mode_t mode, char mstr[] )
 {
     sprintf(mstr, "---------");
@@ -222,6 +225,7 @@ char *getAccessModeString ( const mode_t mode, char mstr[] )
     if ( S_IXOTH & mode )  mstr[8] = '1';
 }
 
+// recurse through a directory and do things based on the choice the user made
 void recurse_through_directory(char* recursepath, int choice)
 {
     // Define the directory variable dp
