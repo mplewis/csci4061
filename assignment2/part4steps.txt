@@ -15,6 +15,6 @@ WHAT'S DONE:
     datetime->buf function (time_to_buf)
     change directories (change_dir)
     create directories (mkdir() built-in)
-    create symbolic links (create_symlink)
+    create symbolic links (symlink() built-in)
     get symlink destination (get_symlink_dest)
     rename file/folder (rename() built-in)
