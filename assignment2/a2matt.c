@@ -14,7 +14,6 @@
 
 ***********************************************************************************************/
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,6 +30,16 @@
 #define PATHSIZE 1024
 #define TOKENSIZE 100
 #define BACKUP_SUFFIX ".bak"
+
+char *file1 = 0;
+char *file2 = 0;
+char *file3 = 0;
+int size1 = 0;
+int size2 = 0;
+int size3 = 0;
+char linkcheck = 0;
+char accessmodes[10];
+struct stat statbuf;
 
 // get current date and time in the format 'Mar-03-2013-20-24-04' and place it
 // in 'buffer' with a max length of 'bufsize'
@@ -77,8 +86,10 @@ int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
     }
 }
 
-void recurse_through_directory_backup(char* recursepath)
+void recurse_through_directory_backup(char* recursepath, char* backuppath)
 {
+    // define strings for source file and dest file
+
     // define the directory variable dp
     DIR *dp;
     if ((dp = opendir(recursepath)) == NULL) {
@@ -117,7 +128,7 @@ void recurse_through_directory_backup(char* recursepath)
                 printf("\tCreating \"%s\" and descending...\n", origdent->d_name);
                 // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
                 realpath(origdent->d_name, recursepath);
-                recurse_through_directory_backup(recursepath);
+                recurse_through_directory_backup(recursepath, backuppath);
             }
         }
     }
@@ -128,7 +139,7 @@ void recurse_through_directory_backup(char* recursepath)
     printf("Current directory: \"%s\"\n", recursepath);
 }
 
-int make_backup_directory(char *backupsrc) {
+int make_backup_directory(char *backupsrc, char *backupfolderout) {
     // stringz
     char *backupdest, *backupold, *backupdate;
     backupdest = (char *) malloc(PATHSIZE * sizeof(char));
@@ -166,6 +177,7 @@ int make_backup_directory(char *backupsrc) {
             printf("Creating new backup folder %s.\n", backupdest);
             mkdir(backupdest, 0755);
             printf("%s created successfully.\n", backupdest);
+            strcpy(backupdest, backupfolderout);
             return 0;
         } else {
             printf("Unknown error while creating %s.\n", backupdest);
@@ -175,16 +187,6 @@ int make_backup_directory(char *backupsrc) {
     }
 
 }
-
-char *file1 = 0;
-char *file2 = 0;
-char *file3 = 0;
-int size1 = 0;
-int size2 = 0;
-int size3 = 0;
-char linkcheck = 0;
-char accessmodes[10];
-struct stat statbuf;
 
 char *getAccessModeString ( const mode_t mode, char mstr[] )
 {
@@ -327,7 +329,7 @@ int main(int argc, char *argv[])
     char *input_dir_name, *dirpath, *chptr;
 
     input_dir_name = (char *) malloc(NAMESIZE * sizeof(char));
-    dirpath = (char *) malloc(NAMESIZE * sizeof(char));
+    dirpath = (char *) malloc(PATHSIZE * sizeof(char));
     printf("SELECT THE FUNCTION YOU WANT TO EXECUTE:\n");
     printf("1. Find the 3 largest files in a directory\n");
     printf("2. List all zero length files in a directory\n");
@@ -399,9 +401,11 @@ int main(int argc, char *argv[])
         /**************Function to perform choice 4**************/
         /********************************************************/
 
-        make_backup_directory(dirpath);
+        char *backuppath;
+        backuppath = (char *) malloc(PATHSIZE * sizeof(char));
+        make_backup_directory(dirpath, backuppath);
         printf("\nNOTE: This function does not actually do anything because we ran out of time to complete part 4. However, here's the recursion to show how it would backup files and recurse through the directories.\n\n");
-        recurse_through_directory_backup(dirpath);
+        recurse_through_directory_backup(dirpath, backuppath);
     }
     else
     {
