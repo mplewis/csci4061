@@ -27,6 +27,7 @@
 #include <errno.h>
 #define NAMESIZE 256
 #define BUFSIZE 256
+#define DATESIZE 128
 #define PATHSIZE 1024
 #define TOKENSIZE 100
 #define BACKUP_SUFFIX ".bak"
@@ -132,10 +133,14 @@ void recurse_through_directory_backup(char* recursepath)
 }
 
 int make_backup_directory(char *backupsrc) {
-    char* backupdest;
-    backupdest = (char*) malloc(PATHSIZE * sizeof(char));
+    // stringz
+    char *backupdest, *backupold, *backupdate;
+    backupdest = (char *) malloc(PATHSIZE * sizeof(char));
+    backupold = (char *) malloc(PATHSIZE * sizeof(char));
+    backupdate = (char *) malloc(PATHSIZE * sizeof(char));
+
     // copy backupsrc to backupdest and append the backup suffix
-    strcat(backupdest, backupsrc);
+    strcpy(backupdest, backupsrc);
     strcat(backupdest, BACKUP_SUFFIX);
 
     printf("Backing up %s to %s\n", backupsrc, backupdest);
@@ -148,7 +153,32 @@ int make_backup_directory(char *backupsrc) {
         if (errno == EEXIST) {
             // directory.bak already exists!
             printf("%s already exists!\n", backupdest);
+            
+            // instantiate a string to hold path to dir.bak-2013-... and the
+            // backup date suffix
+
+            // copy backupdest to backupold and append the date suffix
+            strcpy(backupold, backupdest);
+            time_to_buf(backupdate, PATHSIZE);
+            strcat(backupold, "-");
+            strcat(backupold, backupdate);
+            printf("Renaming old backup %s to %s", backupdest, backupold);
+            
+            // make the new backup directory already!
+            rename(backupdest, backupold);
+            printf("NOW creating new backup folder %s.", backupdest);
+            errcreate = mkdir(backupdest, 0755);
+            if (errcreate != 0) {
+                printf("Unknown error while creating %s.", backupdest);
+            } else {
+                printf("%s created successfully.");
+                return 0;
+            }
+        } else {
+            printf("Unknown error while creating %s.", backupdest);
         }
+    } else {
+        printf("%s created successfully.\n", backupdest);
     }
 
 }
