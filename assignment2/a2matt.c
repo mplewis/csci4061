@@ -71,6 +71,15 @@ int create_dir (char* makedir, mode_t perms) {
     }
 }
 
+// create a symbolic link at 'linksrc' pointing to 'linkdest'.
+// mind the argument order!
+int create_symlink(char* linkdest, char* linksrc)
+{
+    int status;
+    status = symlink(linkdest, linksrc);
+    return status;
+}
+
 void recurse_through_directory_backup(char* recursepath)
 {
     // define the directory variable dp
@@ -138,6 +147,8 @@ int main(int argc, char *argv[])
     printf("%s\n", currpath);
     
     create_dir("NEW_DIR", 0775);
+
+    create_symlink("test.sh", "sym_link_test.sh");
     */
 
     int choice = -1;

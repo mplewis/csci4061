@@ -13,5 +13,6 @@ BACKUP STEPS (for 'mydir'):
 
 WHAT'S DONE:
     datetime->buf function (time_to_buf)
-    function to change directories (change_dir)
-    function to create directories (create_dir)
+    change directories (change_dir)
+    create directories (create_dir)
+    create symbolic links (create_symlink)
