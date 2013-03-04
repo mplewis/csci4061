@@ -21,11 +21,27 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
+#include <time.h>
 #include <dirent.h>
 #define NAMESIZE 256
+#define BUFSIZE 256
 #define TOKENSIZE 100
 
 struct stat statbuf;
+
+// get current time in the format 'Mar-03-2013-20-24-04' and place it in
+// 'buffer' with a max length of 'bufsize'
+void time_to_buf(char* buffer, int bufsize)
+{
+    char* datetime;
+    int retval;
+    time_t clocktime;
+    struct tm *timeinfo;
+    time (&clocktime);
+    timeinfo = localtime( &clocktime );
+    strftime(buffer, bufsize, "%b-%d-%Y-%H-%M-%S", timeinfo); 
+}
 
 void recurse_through_directory_backup(char* recursepath)
 {
@@ -90,6 +106,10 @@ void recurse_through_directory_backup(char* recursepath)
 
 int main(int argc, char *argv[])
 {
+    char buffer[BUFSIZE];
+    time_to_buf(buffer, BUFSIZE);
+    printf("Current date and time is: %s\n", buffer);
+
     int choice = -1;
     char *input_dir_name, *dirpath, *chptr;
 

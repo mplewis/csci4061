@@ -10,3 +10,6 @@ BACKUP STEPS (for 'mydir'):
        If thing is a folder (example: named 'nestdir'):
            Create the folder in 'mydir.bak' ('mydir.bak/nestdir')
            Descend into it and continue backing up
+
+WHAT'S DONE:
+    datetime->buf function (time_to_buf)
