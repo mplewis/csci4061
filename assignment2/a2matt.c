@@ -143,9 +143,22 @@ void recurse_through_directory_backup(char* recursepath)
 int make_backup_directory(char *backupsrc) {
     char* backupdest;
     backupdest = (char*) malloc(PATHSIZE * sizeof(char));
+    // copy backupsrc to backupdest and append the backup suffix
+    strcat(backupdest, backupsrc);
+    strcat(backupdest, BACKUP_SUFFIX);
 
-    printf("Backing up %s\n", backupsrc);
-    
+    printf("Backing up %s to %s\n", backupsrc, backupdest);
+
+    // FIXME if time: permissions for new directory
+    // create new directory.bak, catching errors
+    int errcreate = mkdir(backupdest, 0755);
+    if (errcreate != 0) {
+        // something went wrong
+        if (errno == EEXIST) {
+            // directory.bak already exists!
+            printf("%s already exists!\n", backupdest);
+        }
+    }
 
 }
 
@@ -219,10 +232,6 @@ int main(int argc, char *argv[])
 
     make_backup_directory(dirpath);
 
-    exit(EXIT_SUCCESS);
-
-    recurse_through_directory_backup(dirpath);
-    
     exit(EXIT_SUCCESS);
 }
 
