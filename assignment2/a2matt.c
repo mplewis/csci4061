@@ -90,8 +90,6 @@ void recurse_through_directory_backup(char* recursepath)
 
     // define the dirent for the ORIGINAL directory
     struct dirent *origdent;
-    // define the dirent for the BACKUP directory
-    struct dirent *backupdent;
     // change directory to "recursepath"
     chdir(recursepath);
 
@@ -125,7 +123,7 @@ void recurse_through_directory_backup(char* recursepath)
             }
         }
     }
-    printf("Done with that directory \"%s\"! Going up\n", recursepath);
+    printf("Done with directory \"%s\"! Going up\n", recursepath);
 
     // GO UP A DIRECTORY
     change_dir("..", recursepath, PATHSIZE);
@@ -145,7 +143,6 @@ int make_backup_directory(char *backupsrc) {
 
     printf("Backing up %s to %s\n", backupsrc, backupdest);
 
-    // FIXME if time: permissions for new directory
     // create new directory.bak, catching errors
     int errcreate = mkdir(backupdest, 0755);
     if (errcreate != 0) {
@@ -168,9 +165,9 @@ int make_backup_directory(char *backupsrc) {
             // rename mydir.bak to mydir.bak-DATE
             rename(backupdest, backupold);
             // create mydir.bak from scratch
-            printf("NOW creating new backup folder %s.\n", backupdest);
+            printf("Creating new backup folder %s.\n", backupdest);
             mkdir(backupdest, 0755);
-            printf("Done!\n");
+            printf("%s created successfully.\n", backupdest);
             return 0;
         } else {
             printf("Unknown error while creating %s.\n", backupdest);
@@ -403,8 +400,10 @@ int main(int argc, char *argv[])
         /********************************************************/
         /**************Function to perform choice 4**************/
         /********************************************************/
-        
-        // !!! FIXME add functionality for choice 4
+
+        make_backup_directory(dirpath);
+        printf("\nNOTE: This function does not actually do anything because we ran out of time to complete part 4. However, here's the recursion to show how it would backup files and recurse through the directories.\n\n");
+        recurse_through_directory_backup(dirpath);
     }
     else
     {
