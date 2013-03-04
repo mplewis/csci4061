@@ -421,9 +421,7 @@ int main(int argc, char *argv[])
 
         char *backuppath;
         backuppath = (char *) malloc(PATHSIZE * sizeof(char));
-        printf("%s\n", backuppath);
         make_backup_directory(dirpath, backuppath);
-        printf("%s\n", backuppath);
         printf("\nNOTE: This function does not actually do anything because we ran out of time to complete part 4. However, here's the recursion to show how it would backup files and recurse through the directories.\n\n");
         recurse_through_directory_backup(dirpath, backuppath);
     }
