@@ -162,22 +162,18 @@ int make_backup_directory(char *backupsrc) {
             time_to_buf(backupdate, PATHSIZE);
             strcat(backupold, "-");
             strcat(backupold, backupdate);
-            printf("Renaming old backup %s to %s", backupdest, backupold);
+            printf("Renaming old backup %s to %s\n", backupdest, backupold);
             
             // make the new backup directory already!
             // rename mydir.bak to mydir.bak-DATE
             rename(backupdest, backupold);
             // create mydir.bak from scratch
-            printf("NOW creating new backup folder %s.", backupdest);
+            printf("NOW creating new backup folder %s.\n", backupdest);
             mkdir(backupdest, 0755);
-            if (errcreate != 0) {
-                printf("Unknown error while creating %s.", backupdest);
-            } else {
-                printf("%s created successfully.");
-                return 0;
-            }
+            printf("Done!\n");
+            return 0;
         } else {
-            printf("Unknown error while creating %s.", backupdest);
+            printf("Unknown error while creating %s.\n", backupdest);
         }
     } else {
         printf("%s created successfully.\n", backupdest);
