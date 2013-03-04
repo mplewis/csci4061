@@ -61,15 +61,6 @@ int change_dir(char* changeto, char* newpath, int bufsize) {
     }  
 }
 
-// create a symbolic link at 'linksrc' pointing to 'linkdest'.
-// mind the argument order!
-int create_symlink(char* linkdest, char* linksrc)
-{
-    int status;
-    status = symlink(linkdest, linksrc);
-    return status;
-}
-
 int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
 {
     int retval = 0;
@@ -180,7 +171,7 @@ int main(int argc, char *argv[])
         printf("%i: %s\n", err, strerror(errno));
     }
 
-    create_symlink("test.sh", "sym_link_test.sh");
+    symlink("test.sh", "sym_link_test.sh");
 
     char *linkout;
     linkout = (char *) malloc(PATHSIZE * sizeof(char));
