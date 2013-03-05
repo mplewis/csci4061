@@ -151,7 +151,7 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
     chdir(recursepath);
 
     printf("Going through \"%s\" now\n", recursepath);
-    printf("\tCurrent backup dir: \"%s\"\n", backuppath);
+    // printf("\tCurrent backup dir: \"%s\"\n", backuppath);
 
     // read the directory, item by item
     while ((origdent = readdir(dp)) != NULL )
@@ -172,9 +172,13 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
             strcpy(destfile, backuppath);
             strcat(destfile, "/");
             strcat(destfile, origdent->d_name);
-            printf("\tBacking up \"%s\"\n\t        to \"%s\"\n", srcfile, destfile);
+            // printf("\tBacking up \"%s\"\n\t        to \"%s\"\n", srcfile, destfile);
+            printf("\tBacking up \"%s\"\n", srcfile);
             int cpresult = copy_file(srcfile, destfile);
-            printf("\tCopy result: %i\n", cpresult);
+            if (cpresult != 0) {
+                perror("Error while copying\n");
+                exit(EXIT_FAILURE);
+            }
         } else if (S_ISLNK(statbuf.st_mode)) {
             // do stuff with the symlink
             printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);    
@@ -189,7 +193,7 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
                 // don't go into . and ..! that's the DANGER ZONE
                 // printf("\"%s\" is a SPECIAL directory\n", origdent->d_name);
             } else {
-                printf("\tCreating \"%s\" and descending...\n", origdent->d_name);
+                printf("\tCreating \"%s\" and descending.\n", origdent->d_name);
                 // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
                 realpath(origdent->d_name, recursepath);
                 // append the new path to the backup path
@@ -199,7 +203,7 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
                 // make the new directory
                 mkdir(backuppath, 0755);
                 // keep going through the folder
-                printf("\tNew backup path: \"%s\"\n", backuppath);
+                // printf("\tNew backup path: \"%s\"\n", backuppath);
                 recurse_through_directory_backup(recursepath, backuppath);
             }
       }
