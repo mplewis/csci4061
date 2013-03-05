@@ -14,7 +14,7 @@
 
 ***********************************************************************************************/
 
-// NOTE: We know this code is non functional for part 4 and intend to submit a fixed version within 24 hours. Thank you.
+// NOTE: This code is the working version of the code submitted last night. Thanks for letting us resubmit our code!
 
 #include <stdio.h>
 #include <stdlib.h>
