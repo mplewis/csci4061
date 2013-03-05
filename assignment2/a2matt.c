@@ -14,6 +14,8 @@
 
 ***********************************************************************************************/
 
+// NOTE: We know this code is non functional for part 4 and intend to submit a fixed version within 24 hours. Thank you.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -24,6 +26,8 @@
 #include <time.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+
 #define NAMESIZE 256
 #define BUFSIZE 256
 #define DATESIZE 128
@@ -86,6 +90,42 @@ int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
     }
 }
 
+int copy_file(char* srcfile, char* destfile)
+{
+    char cpbuffer[BUFSIZE];
+    ssize_t count;
+    mode_t perms;
+    int fdin, fdout;
+
+    if  ((fdin = open(srcfile, O_RDONLY)) == -1) {
+        perror("Error opening the input file:");
+        return 1;
+    }
+    /*    printf( "Input file opened with descriptor %d \n", fdin);  */
+ 
+    if  ((fdout = open(destfile, (O_WRONLY | O_CREAT), perms)) == -1 ) {
+        perror("Error creating the output file");
+        return 2;
+    }
+    /*    printf( "Output file opened with descriptor %d \n", fdout);  */
+   
+    while ((count=read(fdin, cpbuffer, BUFSIZE)) > 0) {
+        if (write(fdout, cpbuffer, count) != count) { 
+            perror("Error writing");
+            return 3;
+        }
+    } 
+
+    if (count == -1) {
+        perror("Error reading the input file");
+        return 4;
+    }
+
+    close(fdin);
+    close(fdout);
+    return 0;
+}
+
 // recurse through all directories to back them up in step 4.
 // takes a source (recursepath) and a destination (backuppath)
 void recurse_through_directory_backup(char* recursepath, char* backuppath)
@@ -124,91 +164,101 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
         // if it's a file...
         if (S_ISREG(statbuf.st_mode)) {
             // do stuff with the file
-            printf("\tBacking up \"%s\"\n", origdent->d_name);
+            // put "mydir/myfile" into "srcfile"
+            strcpy(srcfile, recursepath);
+            strcat(srcfile, "/");
+            strcat(srcfile, origdent->d_name);
+            // put "mydir.bak/myfile" into "destfile"
+            strcpy(destfile, backuppath);
+            strcat(destfile, "/");
+            strcat(destfile, origdent->d_name);
+            printf("\tBacking up \"%s\"\n\t        to \"%s\"\n", srcfile, destfile);
+            int cpresult = copy_file(srcfile, destfile);
+            printf("\tCopy result: %i\n", cpresult);
         } else if (S_ISLNK(statbuf.st_mode)) {
-	  // do stuff with the symlink
-		 printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);	 
-		 realpath(origdent->d_name, oldsymlink);
-		 strcpy(newsymlink, backuppath);
-		 strcat(newsymlink, "/");
-		 strcat(newsymlink, origdent->d_name);
-		 symlink(oldsymlink, newsymlink);
-		 } else { // "origdent->d_name" is a directory
+            // do stuff with the symlink
+            printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);    
+            realpath(origdent->d_name, oldsymlink);
+            strcpy(newsymlink, backuppath);
+            strcat(newsymlink, "/");
+            strcat(newsymlink, origdent->d_name);
+            symlink(oldsymlink, newsymlink);
+        } else { // "origdent->d_name" is a directory
             // compare directory name with "." or "..", special directories
             if (strcmp(origdent->d_name, ".") == 0 || strcmp(origdent->d_name, "..") == 0) {
-	      // don't go into . and ..! that's the DANGER ZONE
-	      // printf("\"%s\" is a SPECIAL directory\n", origdent->d_name);
+                // don't go into . and ..! that's the DANGER ZONE
+                // printf("\"%s\" is a SPECIAL directory\n", origdent->d_name);
             } else {
-	      printf("\tCreating \"%s\" and descending...\n", origdent->d_name);
-	      // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
-	      realpath(origdent->d_name, recursepath);
-	      // append the new path to the backup path
-	      strcpy(newbakdir, backuppath);
-	      strcat(backuppath, "/");
-	      strcat(backuppath, origdent->d_name);
-	      // keep going through the folder
-	      printf("\tNew backup path: \"%s\"\n", backuppath);
-	      recurse_through_directory_backup(recursepath, backuppath);
+                printf("\tCreating \"%s\" and descending...\n", origdent->d_name);
+                // convert "origdent->d_name" (relative directory) to absolute directory ("recursepath")
+                realpath(origdent->d_name, recursepath);
+                // append the new path to the backup path
+                strcpy(newbakdir, backuppath);
+                strcat(backuppath, "/");
+                strcat(backuppath, origdent->d_name);
+                // make the new directory
+                mkdir(backuppath, 0755);
+                // keep going through the folder
+                printf("\tNew backup path: \"%s\"\n", backuppath);
+                recurse_through_directory_backup(recursepath, backuppath);
             }
-	  }
-	}
-	printf("Done with directory \"%s\"! Going up\n", recursepath);
-	
-	// GO UP A DIRECTORY, both in the source and destination directory pointers
-	change_dir("..", recursepath, PATHSIZE);
-	// printf("\tNow exploring: \"%s\"\n", recursepath);
-	chdir(backuppath);
-	change_dir("..", backuppath, PATHSIZE);
-	// printf("\tNow backing up to: \"%s\"\n", backuppath);
+      }
     }
-    
-    int make_backup_directory(char *backupsrc, char *backupfolderout) {
-      // stringz
-      char *backupdest, *backupold, *backupdate;
-      backupdest = (char *) malloc(PATHSIZE * sizeof(char));
-      backupold = (char *) malloc(PATHSIZE * sizeof(char));
-      backupdate = (char *) malloc(PATHSIZE * sizeof(char));
+    printf("Done with directory \"%s\"! Going up\n", recursepath);
 
-      // copy backupsrc to backupdest and append the backup suffix
-      strcpy(backupdest, backupsrc);
-      strcat(backupdest, BACKUP_SUFFIX);
-      
-      printf("Backing up %s to %s\n", backupsrc, backupdest);
-      
-      // create new directory.bak, catching errors
-      int errcreate = mkdir(backupdest, 0755);
-      if (errcreate != 0) {
+    // GO UP A DIRECTORY, both in the source and destination directory pointers
+    change_dir("..", recursepath, PATHSIZE);
+    // printf("\tNow exploring: \"%s\"\n", recursepath);
+    strcat(backuppath, "/..");
+    // printf("\tNow backing up to: \"%s\"\n", backuppath);
+}
+
+int make_backup_directory(char *backupsrc, char *backupfolderout) {
+    // strings for directories and paths
+    char *backupdest, *backupold, *backupdate;
+    backupdest = (char *) malloc(PATHSIZE * sizeof(char));
+    backupold = (char *) malloc(PATHSIZE * sizeof(char));
+    backupdate = (char *) malloc(PATHSIZE * sizeof(char));
+
+    // copy backupsrc to backupdest and append the backup suffix
+    strcpy(backupdest, backupsrc);
+    strcat(backupdest, BACKUP_SUFFIX);
+
+    printf("Backing up %s to %s\n", backupsrc, backupdest);
+
+    // create new directory.bak, catching errors
+    int errcreate = mkdir(backupdest, 0755);
+    if (errcreate != 0) {
         // something went wrong
         if (errno == EEXIST) {
-	  // directory.bak already exists!
-	  printf("%s already exists!\n", backupdest);
-            
-	  // instantiate a string to hold path to dir.bak-2013-... and the
-	  // backup date suffix
+            // directory.bak already exists!
+            printf("%s already exists!\n", backupdest);
+                
+            // instantiate a string to hold path to dir.bak-2013-... and the
+            // backup date suffix
 
-	  // copy backupdest to backupold and append the date suffix
-	  strcpy(backupold, backupdest);
-	  time_to_buf(backupdate, PATHSIZE);
-	  strcat(backupold, "-");
-	  strcat(backupold, backupdate);
-	  printf("Renaming old backup %s to %s\n", backupdest, backupold);
-            
-	  // make the new backup directory already!
-	  // rename mydir.bak to mydir.bak-DATE
-	  rename(backupdest, backupold);
-	  // create mydir.bak from scratch
-	  printf("Creating new backup folder %s.\n", backupdest);
-	  mkdir(backupdest, 0755);
-	  printf("%s created successfully.\n", backupdest);
-	  strcpy(backupfolderout, backupdest);
-	  return 0;
+            // copy backupdest to backupold and append the date suffix
+            strcpy(backupold, backupdest);
+            time_to_buf(backupdate, PATHSIZE);
+            strcat(backupold, "-");
+            strcat(backupold, backupdate);
+            printf("Renaming old backup %s to %s\n", backupdest, backupold);
+                
+            // make the new backup directory already!
+            // rename mydir.bak to mydir.bak-DATE
+            rename(backupdest, backupold);
+            // create mydir.bak from scratch
+            printf("Creating new backup folder %s.\n", backupdest);
+            mkdir(backupdest, 0755);
+            printf("%s created successfully.\n", backupdest);
+            strcpy(backupfolderout, backupdest);
+            return 0;
         } else {
-	  printf("Unknown error while creating %s.\n", backupdest);
+            printf("Unknown error while creating %s.\n", backupdest);
         }
-      } else {
+    } else {
         printf("%s created successfully.\n", backupdest);
-      }
-
+    }
 }
 
 // get access mode string from mode
@@ -428,9 +478,7 @@ int main(int argc, char *argv[])
 
         char *backuppath;
         backuppath = (char *) malloc(PATHSIZE * sizeof(char));
-        printf("%s\n", backuppath);
         make_backup_directory(dirpath, backuppath);
-        printf("%s\n", backuppath);
         printf("\nNOTE: This function does not actually do anything because we ran out of time to complete part 4. However, here's the recursion to show how it would backup files and recurse through the directories.\n\n");
         recurse_through_directory_backup(dirpath, backuppath);
     }

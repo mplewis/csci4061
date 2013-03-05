@@ -2,3 +2,4 @@ test*/
 testdir/
 a.out
 test.sh
+*.tar.gz
