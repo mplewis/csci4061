@@ -90,6 +90,7 @@ int get_symlink_dest(char* symlinkpath, char* linkinfo, int bufsize)
     }
 }
 
+// Copy file at path "srcfile" to destination "destfile" and return the error code
 int copy_file(char* srcfile, char* destfile)
 {
     char cpbuffer[BUFSIZE];
@@ -150,7 +151,7 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
     // change directory to "recursepath"
     chdir(recursepath);
 
-    printf("Going through \"%s\" now\n", recursepath);
+    printf("Current directory: \"%s\"\n", recursepath);
     // printf("\tCurrent backup dir: \"%s\"\n", backuppath);
 
     // read the directory, item by item
@@ -173,19 +174,22 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
             strcat(destfile, "/");
             strcat(destfile, origdent->d_name);
             // printf("\tBacking up \"%s\"\n\t        to \"%s\"\n", srcfile, destfile);
-            printf("\tBacking up \"%s\"\n", srcfile);
+            printf("\tBacking up \"%s\"\n", origdent->d_name);
             int cpresult = copy_file(srcfile, destfile);
             if (cpresult != 0) {
                 perror("Error while copying\n");
                 exit(EXIT_FAILURE);
             }
         } else if (S_ISLNK(statbuf.st_mode)) {
-            // do stuff with the symlink
-            printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);    
+            // Back up the symlink by creating a new symlink in the backup folder that points to the original file
+            printf("\tBacking up \"%s\" (SYMLINK)\n", origdent->d_name);
+            // get symlink source path proper
             realpath(origdent->d_name, oldsymlink);
+            // create symlink destination path
             strcpy(newsymlink, backuppath);
             strcat(newsymlink, "/");
             strcat(newsymlink, origdent->d_name);
+            // make the link
             symlink(oldsymlink, newsymlink);
         } else { // "origdent->d_name" is a directory
             // compare directory name with "." or "..", special directories
@@ -208,9 +212,8 @@ void recurse_through_directory_backup(char* recursepath, char* backuppath)
             }
       }
     }
-    printf("Done with directory \"%s\"! Going up\n", recursepath);
-
     // GO UP A DIRECTORY, both in the source and destination directory pointers
+    printf("Done with directory \"%s\", ascending.\n", recursepath);
     change_dir("..", recursepath, PATHSIZE);
     // printf("\tNow exploring: \"%s\"\n", recursepath);
     strcat(backuppath, "/..");
@@ -236,7 +239,7 @@ int make_backup_directory(char *backupsrc, char *backupfolderout) {
         // something went wrong
         if (errno == EEXIST) {
             // directory.bak already exists!
-            printf("%s already exists!\n", backupdest);
+            // printf("%s already exists!\n", backupdest);
                 
             // instantiate a string to hold path to dir.bak-2013-... and the
             // backup date suffix
@@ -246,22 +249,22 @@ int make_backup_directory(char *backupsrc, char *backupfolderout) {
             time_to_buf(backupdate, PATHSIZE);
             strcat(backupold, "-");
             strcat(backupold, backupdate);
-            printf("Renaming old backup %s to %s\n", backupdest, backupold);
+            printf("\tRenaming old backup %s to %s\n", backupdest, backupold);
                 
             // make the new backup directory already!
             // rename mydir.bak to mydir.bak-DATE
             rename(backupdest, backupold);
             // create mydir.bak from scratch
-            printf("Creating new backup folder %s.\n", backupdest);
+            printf("\tCreating new backup folder %s.\n", backupdest);
             mkdir(backupdest, 0755);
-            printf("%s created successfully.\n", backupdest);
+            printf("\t%s created successfully.\n", backupdest);
             strcpy(backupfolderout, backupdest);
             return 0;
         } else {
             printf("Unknown error while creating %s.\n", backupdest);
         }
     } else {
-        printf("%s created successfully.\n", backupdest);
+        printf("\t%s created successfully.\n", backupdest);
     }
 }
 
@@ -376,11 +379,6 @@ void recurse_through_directory(char* recursepath, int choice)
                     }
                 }
             }
-            // If the fourth item is selected
-            else if(choice == 4)
-            {
-            }
-
         }
         // Current item is a directory
         else
@@ -434,16 +432,16 @@ int main(int argc, char *argv[])
         exit(1);
     } 
     else
-        {
+    {
         // Check if item is a directory
         if (S_ISDIR(statbuf.st_mode))
         {
-        // do nothing
+            // do nothing
         }
         else
         {
-        perror("ERROR: Path is not a directory\n");
-        exit(2);
+            perror("ERROR: Path is not a directory\n");
+            exit(2);
         }
     }
     if(choice == 1)
@@ -483,8 +481,8 @@ int main(int argc, char *argv[])
         char *backuppath;
         backuppath = (char *) malloc(PATHSIZE * sizeof(char));
         make_backup_directory(dirpath, backuppath);
-        printf("\nNOTE: This function does not actually do anything because we ran out of time to complete part 4. However, here's the recursion to show how it would backup files and recurse through the directories.\n\n");
         recurse_through_directory_backup(dirpath, backuppath);
+        printf("Backup complete.\n");
     }
     else
     {
