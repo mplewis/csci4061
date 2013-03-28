@@ -3,16 +3,16 @@
  CSci 4061 Spring 2013
  Assignment# 3: Piper program for executing pipe commands 
 
- Student name: <full name of first student>   
- Student ID:   <first student's ID>   
+ Student name: Matthew Lewis
+ Student ID:   4237332
 
- Student name: <full name of second student>   
+ Student name: Christian Drews
  Student ID:   <Second student's ID>   
 
- X500 id: <id1>, <id2 (optional)>
+ X500 id: lewi0486, <id2 (optional)>
 
- Operating system on which you tested your code: Linux, Unix, Solaris, MacOS
- CSELABS machine: <machine you tested on eg: xyz.cselabs.umn.edu>
+ Operating system on which you tested your code: Linux
+ CSELABS machine: apollo.cselabs.umn.edu
 
  GROUP INSTRUCTION:  Please make only ONLY one  submission when working in a group.
 ***********************************************************************************************/
