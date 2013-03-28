@@ -1,3 +1,3 @@
 set -e
-gcc -o searchStr searchStr.c
+gcc --std=gnu99 -o searchStr searchStr.c
 ./searchStr
