@@ -63,7 +63,7 @@ int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_
 
   cmds[0] = strtok(commandLine, "|");
   num_cmds++;
-  while((cmds[num_cmds] = strtok(&NULL, "|")) != NULL) {
+  while((cmds[num_cmds] = strtok(NULL, "|")) != NULL) {
     num_cmds++;
   }
   
@@ -90,12 +90,12 @@ void parse_command(char input[MAX_CMD_LENGTH],
                    char command[MAX_CMD_LENGTH],
                    char *argvector[MAX_CMD_LENGTH]){
   int j = 0;
-  &argvector[j] = strtok(input, " ");
+  argvector[j] = strtok(input, " ");
   j++;
-  while((&argvector[j] == strtok(&NULL, " ")) != NULL) {
+  while((argvector[j] = strtok(NULL, " ")) != NULL) {
       j++;
     }
-  command = &argvector[0];
+  command = argvector[0];
 }
 
 
@@ -109,7 +109,11 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 		int cmd_pids[MAX_CMDS_NUM],
 		int cmd_stat[MAX_CMDS_NUM],
 		int num_cmds) {
-  
+
+#ifdef DEBUG
+  fprintf(logfp, "Commands: %d, Command PIDs: %d, Command Stats: %d, Number of Commands: %d \n", cmds, cmd_pids, cmd_stat, num_cmds); 
+#endif
+
 }  
 
 
@@ -169,7 +173,19 @@ int main(int ac, char *av[]){
   }
 
   /* Set up signal handler for CNTRL-C to kill only the pipeline processes  */
-
+  /* if(sigaction(SIGINT, NULL, &act) == -1) {
+    perror("ERROR in getting old handler for SIGINT")
+      }
+  else {
+    if(act.sa_handler == SIG_DFL) {
+      act.sa_handler = SIG_IGN;
+      if(sigaction(SIGINT, &act, NULL) == -1) {
+	perror("Error in setting ignore for SIGINT");
+      }
+      killPipeline(SIGINT);
+    }
+  }
+  */
   logfp =  fopen("LOGFILE", "w");
 
 
