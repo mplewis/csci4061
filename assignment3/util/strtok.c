@@ -17,13 +17,14 @@
 
 FILE *logfp;
 
-int num_cmds = 0;
+
 char *cmds[MAX_CMDS_NUM];
 int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM];
 
-void splitCmds(char *multipleCmds)
+int splitCmds(char *multipleCmds)
 {
+	int num_cmds = 0;
 	cmds[0] = strtok(multipleCmds, "|");
 	printf("%s\n", cmds[0]);
 	num_cmds++;
@@ -31,6 +32,7 @@ void splitCmds(char *multipleCmds)
 		printf("%s\n", cmds[num_cmds]);
 		num_cmds++;
 	}
+	return num_cmds;
 }
 
 int main()
@@ -40,7 +42,7 @@ int main()
 	gets(pipeCommand);
 	printf("Commands: <%s>\n", pipeCommand);
 
-	splitCmds(pipeCommand);
+	printf("Number of commands: %i\n", splitCmds(pipeCommand));
 
 	return 0;
 }
