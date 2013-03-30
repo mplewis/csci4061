@@ -14,9 +14,8 @@
  Operating system on which you tested your code: Linux
  CSELABS machine: apollo.cselabs.umn.edu
 
- GROUP INSTRUCTION:  Please make only ONLY one  submission when working in a group.
+ GROUP INSTRUCTION:  Please make only ONLY one submission when working in a group.
 ***********************************************************************************************/
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,8 +41,6 @@ char *cmds[MAX_CMDS_NUM];          // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
 
-
-
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
      ls -l | sort -d +4 | cat | wc
@@ -59,18 +56,13 @@ int cmd_status[MAX_CMDS_NUM];
 */
 /*******************************************************************************/
 
-int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM]){
-
+int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM])
+{
   cmds[0] = strtok(commandLine, "|");
   num_cmds++;
   while((cmds[num_cmds] = strtok(NULL, "|")) != NULL) {
     num_cmds++;
   }
-  
-
-   fprintf(stderr, "THIS PROGRAM HAS MISSING CODE WHICH YOU HAVE TO WRITE\n");
-   exit(1);
-
 }
 
 /*******************************************************************************/
@@ -93,8 +85,8 @@ void parse_command(char input[MAX_CMD_LENGTH],
   argvector[j] = strtok(input, " ");
   j++;
   while((argvector[j] = strtok(NULL, " ")) != NULL) {
-      j++;
-    }
+    j++;
+  }
   command = argvector[0];
 }
 
@@ -127,7 +119,7 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 /*******************************************************************************/
 
 
-void create_command_process (char cmds[MAX_CMD_LENGTH],   // Command line to be processed
+void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be processed
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
 		                         int i)                       // commmand line number being processed
 {
@@ -136,8 +128,13 @@ void create_command_process (char cmds[MAX_CMD_LENGTH],   // Command line to be 
     // this process is the parent, store the child pid in the array
     cmd_pids[i] = child_pid
   } else {
-    // this process is the child, execute the command from the array
-    exec(cmds[i]);
+    // this process is the child
+    cmd[MAX_CMD_LENGTH] = cmds[]
+
+    // execute the command
+    execvp();
+    // if this point is reached, execvp has failed; print to console
+    fprintf(stderr, "ERROR: failed to execute %s\n", cmds[0]);
   }
 }
 
