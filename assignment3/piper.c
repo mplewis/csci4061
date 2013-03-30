@@ -132,7 +132,7 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
   }
   // fork to parent and child
   if ((child_pid = fork()) == -1) {
-    perror("ERROR: Could not fork");
+    perror("ERROR: Could not fork\n");
     exit(-1);
   }
 
@@ -143,7 +143,9 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     // 0 is the read-from end; close the write-to end
     close(pipeData[1]);
     // take input from the pipe
-    dup2(pipeData[0], 0);
+    if ((dup2(pipeData[0], 0)) == -1) {
+      perror("ERROR: Parent could not dup2 pipe\n");
+    }
     // close the unused end
     close(pipeData[0]);
   } else {
@@ -157,7 +159,9 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     // 1 is the write-to end; close the read-from end
     close(pipeData[0]);
     // direct output to the pipe
-    dup2(pipeData[1], 1);
+    if (dup2(pipeData[1], 1)) {
+      perror("ERROR: CHild could not dup2 pipe\n");
+    }
     // close the unused end
     close(pipeData[1]);
     // parse the cmd_with_args into cmd_only and cmd_args
