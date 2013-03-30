@@ -148,6 +148,8 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],   // Command line to be p
     // this process is the parent, store the child pid in the array
     printf("I am parent process with pid %i\n", getpid());
     cmd_pids[i] = child_pid;
+
+    /*
     // parent reads from child
     // 0 is the read-from end; close the write-to end
     close(pipeData[1]);
@@ -155,11 +157,15 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],   // Command line to be p
     dup2(pipeData[0], 0);
     // close the unused end
     close(pipeData[0]);
+    */
+
   } else {
     // this process is the child
     printf("I am the child process with pid %i\n", getpid());
     char cmd_only[MAX_CMD_LENGTH];
     char *cmd_args[MAX_CMD_LENGTH];
+
+    /*
     // connect to pipeline
     // child writes to parent
     // 1 is the write-to end; close the read-from end
@@ -171,6 +177,8 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],   // Command line to be p
     // close the unused end
     fprintf(stderr, "I'm closing pipeData[1]\n");
     close(pipeData[1]);
+    */
+
     // parse the cmd_with_args into cmd_only and cmd_args
     fprintf(stderr, "I'm doing parse_command\n");
     parse_command(cmd, cmd_only, cmd_args);
@@ -227,7 +235,7 @@ int main(int ac, char *av[]){
   /* Set up signal handler for CNTRL-C to kill only the pipeline processes  */
   sigsetjmp(jmpbuf, 1);
 
-  logfp =  fopen("LOGFILE", "w");
+  logfp = fopen("LOGFILE", "w");
 
   
 
