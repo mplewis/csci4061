@@ -14,9 +14,8 @@
  Operating system on which you tested your code: Linux
  CSELABS machine: apollo.cselabs.umn.edu
 
- GROUP INSTRUCTION:  Please make only ONLY one  submission when working in a group.
+ GROUP INSTRUCTION:  Please make only ONLY one submission when working in a group.
 ***********************************************************************************************/
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,9 +40,15 @@ FILE *logfp;
 int num_cmds = 0;
 char *cmds[MAX_CMDS_NUM];          // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
+<<<<<<< HEAD
 int cmd_status[MAX_CMDS_NUM]; 
 
 static sigjmp_buf jmpbuf;
+=======
+int cmd_status[MAX_CMDS_NUM];
+
+int pipeData[2];                   // the pipeline used by everything
+>>>>>>> matt
 
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
@@ -60,8 +65,8 @@ static sigjmp_buf jmpbuf;
 */
 /*******************************************************************************/
 
-int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM]){
-
+int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM])
+{
   cmds[0] = strtok(commandLine, "|");
   num_cmds++;
   while((cmds[num_cmds] = strtok(NULL, "|")) != NULL) {
@@ -89,8 +94,8 @@ void parse_command(char input[MAX_CMD_LENGTH],
   argvector[j] = strtok(input, " ");
   j++;
   while((argvector[j] = strtok(NULL, " ")) != NULL) {
-      j++;
-    }
+    j++;
+  }
   command = argvector[0];
 }
 
@@ -123,18 +128,60 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 /*******************************************************************************/
 
 
-void create_command_process (char cmds[MAX_CMD_LENGTH],   // Command line to be processed
+void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be processed
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
 			     int i)                       // commmand line number being processed
 {
-  /*  int child_pid = fork();
+  // create pipeline in pipeData
+  if (pipe(pipeData) == -1) {
+    perror("ERROR: Failed to create pipe\n");
+    exit(-1);
+  }
+  // fork to parent and child
+  if ((child_pid = fork()) == -1) {
+    perror("ERROR: Could not fork\n");
+    exit(-1);
+  }
   if (child_pid) {
     // this process is the parent, store the child pid in the array
-    cmd_pids[i] = child_pid
+    cmd_pids[i] = child_pid;
+    // parent reads from child
+    // 0 is the read-from end; close the write-to end
+    close(pipeData[1]);
+    // take input from the pipe
+    if ((dup2(pipeData[0], 0)) == -1) {
+      perror("ERROR: Parent could not dup2 pipe\n");
+      exit(-1);
+    }
+    // close the unused end
+    close(pipeData[0]);
   } else {
-    // this process is the child, execute the command from the array
-    exec(cmds[i]);
-    } */
+    // this process is the child
+    char cmd_with_args[MAX_CMD_LENGTH] = cmds[i];
+    char cmd_only[MAX_CMD_LENGTH];
+    char *cmd_args[MAX_CMD_LENGTH];
+
+    // connect to pipeline
+    // child writes to parent
+    // 1 is the write-to end; close the read-from end
+    close(pipeData[0]);
+    // direct output to the pipe
+    if (dup2(pipeData[1], 1)) {
+      perror("ERROR: Child could not dup2 pipe\n");
+      _exit(-1);
+    }
+    // close the unused end
+    close(pipeData[1]);
+    // parse the cmd_with_args into cmd_only and cmd_args
+    parse_command(cmd_with_args, cmd_only, cmd_args);
+
+    // execute the command
+    execvp(cmd_only, cmd_with_args);
+
+    // if this point is reached, execvp has failed; print an error to console and die
+    perror("ERROR: Failed to execute %s\n", cmds[0]);
+    _exit(-1);
+  }
 }
 
 /********************************************************************************/
@@ -217,11 +264,11 @@ int main(int ac, char *av[]){
     /* create 3 processes; one to execute "ls -l", second for "grep ^d"  */
     /* and the third for executing "wc -l"                               */
    
-    for(i=0;i<num_cmds;i++){
-         /*  CREATE A NEW PROCCES EXECUTTE THE i'TH COMMAND    */
+    for(i = 0; i < num_cmds; i++){
+         /*  CREATE A NEW PROCCES EXECUTE THE i'TH COMMAND    */
          /*  YOU WILL NEED TO CREATE A PIPE, AND CONNECT THIS NEW  */
-         /*  PROCESS'S stdin AND stdout  TO APPROPRIATE PIPES    */  
-         create_command_process (cmds[i], cmd_pids, i);
+         /*  PROCESS'S stdin AND stdout TO APPROPRIATE PIPES    */  
+      create_command_process (cmds[i], cmd_pids, i);
     }
 
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
