@@ -63,9 +63,11 @@ int pipeData[2];                   // the pipeline used by everything
 int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM])
 {
   int count = 0;
-  cmds[0] = strtok(commandLine, "|");
+  cmds[count] = strtok(commandLine, "|");
+  printf("cmds[%i] = %s\n", count, cmds[count]);
   count++;
-  while((cmds[num_cmds] = strtok(NULL, "|")) != NULL) {
+  while((cmds[count] = strtok(NULL, "|")) != NULL) {
+    printf("cmds[%i] = %s\n", count, cmds[count]);
     count++;
   }
   return count;
@@ -87,13 +89,15 @@ int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_
 void parse_command(char input[MAX_CMD_LENGTH],
                    char command[MAX_CMD_LENGTH],
                    char *argvector[MAX_CMD_LENGTH]){
-  int j = 0;
-  argvector[j] = strtok(input, " ");
-  j++;
-  while((argvector[j] = strtok(NULL, " ")) != NULL) {
-    j++;
+  int count = 0;
+  argvector[count] = strtok(input, " ");
+  fprintf(stderr, "argvector[%i] = %s\n", count, argvector[count]);
+  count++;
+  while((argvector[count] = strtok(NULL, " ")) != NULL) {
+    fprintf(stderr, "argvector[%i] = %s\n", count, argvector[count]);
+    count++;
   }
-  command = argvector[0];
+  strcpy(command, argvector[0]);
 }
 
 
@@ -142,41 +146,39 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],   // Command line to be p
   }
   if (child_pid) {
     // this process is the parent, store the child pid in the array
+    printf("I am parent process with pid %i\n", getpid());
     cmd_pids[i] = child_pid;
     // parent reads from child
     // 0 is the read-from end; close the write-to end
     close(pipeData[1]);
     // take input from the pipe
-    if ((dup2(pipeData[0], 0)) == -1) {
-      perror("ERROR: Parent could not dup2 pipe\n");
-      exit(-1);
-    }
+    dup2(pipeData[0], 0);
     // close the unused end
     close(pipeData[0]);
   } else {
     // this process is the child
+    printf("I am the child process with pid %i\n", getpid());
     char cmd_only[MAX_CMD_LENGTH];
     char *cmd_args[MAX_CMD_LENGTH];
-
     // connect to pipeline
     // child writes to parent
     // 1 is the write-to end; close the read-from end
+    fprintf(stderr, "I'm closing pipedata[0]\n");
     close(pipeData[0]);
     // direct output to the pipe
-    if (dup2(pipeData[1], 1)) {
-      perror("ERROR: Child could not dup2 pipe\n");
-      _exit(-1);
-    }
+    fprintf(stderr, "I'm running dup2\n");
+    dup2(pipeData[1], 1);
     // close the unused end
+    fprintf(stderr, "I'm closing pipeData[1]\n");
     close(pipeData[1]);
     // parse the cmd_with_args into cmd_only and cmd_args
+    fprintf(stderr, "I'm doing parse_command\n");
     parse_command(cmd, cmd_only, cmd_args);
-
     // execute the command
+    fprintf(stderr, "I'm executing the command <%s>\n", cmd_only);
     execvp(cmd_only, cmd_args);
-
     // if this point is reached, execvp has failed; print an error to console and die
-    fprintf(stderr, "ERROR: Failed to execute %s\n", cmds[0]);
+    fprintf(stderr, "ERROR: Failed to execute command <%s>\n", cmd_only);
     _exit(-1);
   }
 }
@@ -229,24 +231,24 @@ int main(int ac, char *av[]){
 
   
 
-  while (1) {
-     signal(SIGINT, SIG_DFL ); 
-     pipcount = 0;
+  // while (1) {
+    signal(SIGINT, SIG_DFL ); 
+    pipcount = 0;
 
-     /*  Get input command file anme form the user */
-     char pipeCommand[MAX_INPUT_LINE_LENGTH];
+    /*  Get input command file anme form the user */
+    char pipeCommand[MAX_INPUT_LINE_LENGTH];
 
-     fflush(stdout);
-     printf("Give a list of pipe commands: ");
-     gets(pipeCommand); 
-     char* terminator = "quit";
-     printf("You entered : list of pipe commands  %s\n", pipeCommand);
-     if ( strcmp(pipeCommand, terminator) == 0  ) {
-        fflush(logfp);
-        fclose(logfp);
-        printf("Goodbye!\n");
-        exit(0);
-     }  
+    fflush(stdout);
+    printf("Give a list of pipe commands: ");
+    gets(pipeCommand); 
+    char* terminator = "quit";
+    printf("You entered: list of pipe commands %s\n", pipeCommand);
+    if ( strcmp(pipeCommand, terminator) == 0  ) {
+      fflush(logfp);
+      fclose(logfp);
+      printf("Goodbye!\n");
+      exit(0);
+    }  
 
     num_cmds = parse_command_line( pipeCommand, cmds);
     printf("num_cmds = %d\n", num_cmds);
@@ -275,7 +277,7 @@ int main(int ac, char *av[]){
 
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
 
-  }
+    //}
 } //end main
 
 /*************************************************/
