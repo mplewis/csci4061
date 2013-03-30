@@ -1,3 +1,3 @@
 set -e
-gcc -o parseStr parseStr.c
+gcc -o parseStr.out parseStr.c
 ./parseStr
