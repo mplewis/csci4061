@@ -145,6 +145,7 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     // take input from the pipe
     if ((dup2(pipeData[0], 0)) == -1) {
       perror("ERROR: Parent could not dup2 pipe\n");
+      exit(-1);
     }
     // close the unused end
     close(pipeData[0]);
@@ -160,7 +161,8 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     close(pipeData[0]);
     // direct output to the pipe
     if (dup2(pipeData[1], 1)) {
-      perror("ERROR: CHild could not dup2 pipe\n");
+      perror("ERROR: Child could not dup2 pipe\n");
+      _exit(-1);
     }
     // close the unused end
     close(pipeData[1]);
