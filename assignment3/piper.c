@@ -38,7 +38,7 @@
 FILE *logfp;
 
 int num_cmds = 0;
-char *cmds[MAX_CMDS_NUM];
+char *cmds[MAX_CMDS_NUM];          // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
 
@@ -119,22 +119,26 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 
 
 /*******************************************************************************/
-/*     The create_command_process  function will create a child process        */
-/*     for the i'th command                                                    */
-/*     The list of all pipe commands in the array "cmds"                       */
+/*     The create_command_process function will create a child process         */
+/*     for the i'th command in the array "cmds"                                */
 /*     the argument cmd_pids contains PID of all preceding command             */
-/*     processes in the pipleine.  This function will add at the               */
+/*     processes in the pipleine. This function will add at the                */
 /*     i'th index the PID of the new child process.                            */
 /*******************************************************************************/
 
 
 void create_command_process (char cmds[MAX_CMD_LENGTH],   // Command line to be processed
-                     int cmd_pids[MAX_CMDS_NUM],          // PIDs of preceding pipeline processes
-                                                          // Insert PID of new command processs
-		             int i)                               // commmand line number being processed
+                             int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
+		                         int i)                       // commmand line number being processed
 {
-
-
+  int child_pid = fork();
+  if (child_pid) {
+    // this process is the parent, store the child pid in the array
+    cmd_pids[i] = child_pid
+  } else {
+    // this process is the child, execute the command from the array
+    exec(cmds[i]);
+  }
 }
 
 
