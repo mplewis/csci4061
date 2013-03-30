@@ -217,7 +217,7 @@ void killPipeline( int signum ) {
 
 int main(int ac, char *av[]){
 
-  int i,  pipcount;
+  int i, pipcount;
   //check usage
   if (ac > 1){
     printf("\nIncorrect use of parameters\n");
@@ -228,7 +228,7 @@ int main(int ac, char *av[]){
   /* Set up signal handler for CNTRL-C to kill only the pipeline processes  */
   sigsetjmp(jmpbuf, 1);
 
-  logfp =  fopen("LOGFILE", "w");
+  logfp = fopen("LOGFILE", "w");
 
   
 
@@ -263,13 +263,21 @@ int main(int ac, char *av[]){
     /* For example: for command "ls -l | grep ^d | wc -l "  it will      */
     /* create 3 processes; one to execute "ls -l", second for "grep ^d"  */
     /* and the third for executing "wc -l"                               */
-   
-    for(i = 0; i < num_cmds; i++){
-         /*  CREATE A NEW PROCCES EXECUTE THE i'TH COMMAND    */
-         /*  YOU WILL NEED TO CREATE A PIPE, AND CONNECT THIS NEW  */
-         /*  PROCESS'S stdin AND stdout TO APPROPRIATE PIPES    */  
-      create_command_process (cmds[i], cmd_pids, i);
+    
+    // create child process 0
+
+    // wire the input to stdin
+
+    // wire the output to a pipe
+
+    for(i = 1; i < num_cmds; i++){
+      // create child process i
+      // wire the input to the last pipe (the output of the last process created)
+      // wire the output to a new pipe
+      create_command_process(cmds[i], cmd_pids, i);
     }
+
+    // wire the output of the pipe attached to the output of process i to stdout
 
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
 
