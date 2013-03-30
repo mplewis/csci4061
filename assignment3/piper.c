@@ -127,6 +127,9 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
   if (child_pid) {
     // this process is the parent, store the child pid in the array
     cmd_pids[i] = child_pid
+
+    // create pipes
+
   } else {
     // this process is the child
     char cmd_with_args[MAX_CMD_LENGTH] = cmds[i];
@@ -140,7 +143,7 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     execvp(cmd_only, cmd_with_args);
 
     // if this point is reached, execvp has failed; print an error to console and die
-    fprintf(stderr, "ERROR: failed to execute %s\n", cmds[0]);
+    perror("ERROR: failed to execute %s\n", cmds[0]);
     exit(-1);
   }
 }
