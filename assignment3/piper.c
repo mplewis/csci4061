@@ -229,11 +229,11 @@ int main(int ac, char *av[]){
     /* create 3 processes; one to execute "ls -l", second for "grep ^d"  */
     /* and the third for executing "wc -l"                               */
    
-    for(i=0;i<num_cmds;i++){
-         /*  CREATE A NEW PROCCES EXECUTTE THE i'TH COMMAND    */
+    for(i = 0; i < num_cmds; i++){
+         /*  CREATE A NEW PROCCES EXECUTE THE i'TH COMMAND    */
          /*  YOU WILL NEED TO CREATE A PIPE, AND CONNECT THIS NEW  */
-         /*  PROCESS'S stdin AND stdout  TO APPROPRIATE PIPES    */  
-         create_command_process (cmds[i], cmd_pids, i);
+         /*  PROCESS'S stdin AND stdout TO APPROPRIATE PIPES    */  
+      create_command_process (cmds[i], cmd_pids, i);
     }
 
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
