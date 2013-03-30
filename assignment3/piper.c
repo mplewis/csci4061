@@ -129,12 +129,19 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     cmd_pids[i] = child_pid
   } else {
     // this process is the child
-    cmd[MAX_CMD_LENGTH] = cmds[]
+    char cmd_with_args[MAX_CMD_LENGTH] = cmds[i];
+    char cmd_only[MAX_CMD_LENGTH];
+    char *cmd_args[MAX_CMD_LENGTH];
+
+    // parse the cmd_with_args into cmd_only and cmd_args
+    parse_command(cmd_with_args, cmd_only, cmd_args);
 
     // execute the command
-    execvp();
-    // if this point is reached, execvp has failed; print to console
+    execvp(cmd_only, cmd_with_args);
+
+    // if this point is reached, execvp has failed; print an error to console and die
     fprintf(stderr, "ERROR: failed to execute %s\n", cmds[0]);
+    exit(-1);
   }
 }
 
