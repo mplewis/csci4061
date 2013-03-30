@@ -7,9 +7,9 @@
  Student ID:   4237332
 
  Student name: Christian Drews
- Student ID:   <Second student's ID>   
+ Student ID:   4368668   
 
- X500 id: lewi0486, <id2 (optional)>
+ X500 id: lewi0486, drews032
 
  Operating system on which you tested your code: Linux
  CSELABS machine: apollo.cselabs.umn.edu
@@ -43,6 +43,7 @@ int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
 
 
+
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
      ls -l | sort -d +4 | cat | wc
@@ -59,6 +60,13 @@ int cmd_status[MAX_CMDS_NUM];
 /*******************************************************************************/
 
 int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM]){
+
+  cmds[0] = strtok(commandLine, "|");
+  num_cmds++;
+  while((cmds[num_cmds] = strtok(&NULL, "|")) != NULL) {
+    num_cmds++;
+  }
+  
 
    fprintf(stderr, "THIS PROGRAM HAS MISSING CODE WHICH YOU HAVE TO WRITE\n");
    exit(1);
@@ -81,6 +89,13 @@ int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_
 void parse_command(char input[MAX_CMD_LENGTH],
                    char command[MAX_CMD_LENGTH],
                    char *argvector[MAX_CMD_LENGTH]){
+  int j = 0;
+  &argvector[j] = strtok(input, " ");
+  j++;
+  while((&argvector[j] == strtok(&NULL, " ")) != NULL) {
+      j++;
+    }
+  command = &argvector[0];
 }
 
 
