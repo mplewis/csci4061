@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <setjmp.h>
 
 #define DEBUG
 
@@ -42,7 +43,7 @@ char *cmds[MAX_CMDS_NUM];          // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
 
-
+static sigjmp_buf jmpbuf;
 
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
@@ -66,11 +67,6 @@ int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_
   while((cmds[num_cmds] = strtok(NULL, "|")) != NULL) {
     num_cmds++;
   }
-  
-
-   fprintf(stderr, "THIS PROGRAM HAS MISSING CODE WHICH YOU HAVE TO WRITE\n");
-   exit(1);
-
 }
 
 /*******************************************************************************/
@@ -129,18 +125,17 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 
 void create_command_process (char cmds[MAX_CMD_LENGTH],   // Command line to be processed
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
-		                         int i)                       // commmand line number being processed
+			     int i)                       // commmand line number being processed
 {
-  int child_pid = fork();
+  /*  int child_pid = fork();
   if (child_pid) {
     // this process is the parent, store the child pid in the array
     cmd_pids[i] = child_pid
   } else {
     // this process is the child, execute the command from the array
     exec(cmds[i]);
-  }
+    } */
 }
-
 
 /********************************************************************************/
 /*   The function waitPipelineTermination waits for all of the pipeline         */
@@ -148,8 +143,11 @@ void create_command_process (char cmds[MAX_CMD_LENGTH],   // Command line to be 
 /********************************************************************************/
 
 void waitPipelineTermination () {
-
-
+  int j = 0;
+  while(j < num_cmds) {
+    waitpid(cmd_pids[j], NULL, 0);
+    j++;
+  }
 }
 
 /********************************************************************************/
@@ -160,8 +158,12 @@ void waitPipelineTermination () {
 /********************************************************************************/
 
 void killPipeline( int signum ) {
-
-
+  int j = 0;
+  while(j < num_cmds) {
+    kill(cmd_pids[j], SIGKILL);
+    j++;
+  }
+  siglongjmp(jmpbuf, 1);
 }
 
 /********************************************************************************/
@@ -177,21 +179,11 @@ int main(int ac, char *av[]){
   }
 
   /* Set up signal handler for CNTRL-C to kill only the pipeline processes  */
-  /* if(sigaction(SIGINT, NULL, &act) == -1) {
-    perror("ERROR in getting old handler for SIGINT")
-      }
-  else {
-    if(act.sa_handler == SIG_DFL) {
-      act.sa_handler = SIG_IGN;
-      if(sigaction(SIGINT, &act, NULL) == -1) {
-	perror("Error in setting ignore for SIGINT");
-      }
-      killPipeline(SIGINT);
-    }
-  }
-  */
+  sigsetjmp(jmpbuf, 1);
+
   logfp =  fopen("LOGFILE", "w");
 
+  
 
   while (1) {
      signal(SIGINT, SIG_DFL ); 
