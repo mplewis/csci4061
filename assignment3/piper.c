@@ -40,15 +40,10 @@ FILE *logfp;
 int num_cmds = 0;
 char *cmds[MAX_CMDS_NUM];          // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
-<<<<<<< HEAD
 int cmd_status[MAX_CMDS_NUM]; 
 
 static sigjmp_buf jmpbuf;
-=======
-int cmd_status[MAX_CMDS_NUM];
-
 int pipeData[2];                   // the pipeline used by everything
->>>>>>> matt
 
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
