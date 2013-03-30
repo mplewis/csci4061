@@ -37,7 +37,7 @@
 
 FILE *logfp;
 
-int num_cmds = 0;
+int num_cmds;
 char *cmds[MAX_CMDS_NUM];          // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
@@ -62,11 +62,13 @@ int pipeData[2];                   // the pipeline used by everything
 
 int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM])
 {
+  int count = 0;
   cmds[0] = strtok(commandLine, "|");
-  num_cmds++;
+  count++;
   while((cmds[num_cmds] = strtok(NULL, "|")) != NULL) {
-    num_cmds++;
+    count++;
   }
+  return count;
 }
 
 /*******************************************************************************/
@@ -123,10 +125,11 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 /*******************************************************************************/
 
 
-void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be processed
+void create_command_process (char cmd[MAX_CMD_LENGTH],   // Command line to be processed
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
 			     int i)                       // commmand line number being processed
 {
+  int child_pid;
   // create pipeline in pipeData
   if (pipe(pipeData) == -1) {
     perror("ERROR: Failed to create pipe\n");
@@ -152,7 +155,6 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     close(pipeData[0]);
   } else {
     // this process is the child
-    char cmd_with_args[MAX_CMD_LENGTH] = cmds[i];
     char cmd_only[MAX_CMD_LENGTH];
     char *cmd_args[MAX_CMD_LENGTH];
 
@@ -168,13 +170,13 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     // close the unused end
     close(pipeData[1]);
     // parse the cmd_with_args into cmd_only and cmd_args
-    parse_command(cmd_with_args, cmd_only, cmd_args);
+    parse_command(cmd, cmd_only, cmd_args);
 
     // execute the command
-    execvp(cmd_only, cmd_with_args);
+    execvp(cmd_only, cmd_args);
 
     // if this point is reached, execvp has failed; print an error to console and die
-    perror("ERROR: Failed to execute %s\n", cmds[0]);
+    fprintf(stderr, "ERROR: Failed to execute %s\n", cmds[0]);
     _exit(-1);
   }
 }
@@ -247,9 +249,10 @@ int main(int ac, char *av[]){
      }  
 
     num_cmds = parse_command_line( pipeCommand, cmds);
+    printf("num_cmds = %d\n", num_cmds);
 
     /*  SET UP SIGNAL HANDLER  TO HANDLE CNTRL-C                         */
-    signal(SIGINT, killPipeline); 
+    //signal(SIGINT, killPipeline); 
 
     /*  num_cmds indicates the number of command lines in the input file */
 
