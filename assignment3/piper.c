@@ -39,7 +39,9 @@ FILE *logfp;
 int num_cmds = 0;
 char *cmds[MAX_CMDS_NUM];          // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
-int cmd_status[MAX_CMDS_NUM]; 
+int cmd_status[MAX_CMDS_NUM];
+
+int pipeData[2];                   // the pipeline used by everything
 
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
@@ -123,19 +125,41 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
 		                         int i)                       // commmand line number being processed
 {
-  int child_pid = fork();
+  // create pipeline in pipeData
+  if (pipe(pipeData) == -1) {
+    perror("ERROR: Failed to create pipe\n");
+    exit(-1);
+  }
+  // fork to parent and child
+  if ((child_pid = fork()) == -1) {
+    perror("ERROR: Could not fork");
+    exit(-1);
+  }
+
   if (child_pid) {
     // this process is the parent, store the child pid in the array
-    cmd_pids[i] = child_pid
-
-    // create pipes
-
+    cmd_pids[i] = child_pid;
+    // parent reads from child
+    // 0 is the read-from end; close the write-to end
+    close(pipeData[1]);
+    // take input from the pipe
+    dup2(pipeData[0], 0);
+    // close the unused end
+    close(pipeData[0]);
   } else {
     // this process is the child
     char cmd_with_args[MAX_CMD_LENGTH] = cmds[i];
     char cmd_only[MAX_CMD_LENGTH];
     char *cmd_args[MAX_CMD_LENGTH];
 
+    // connect to pipeline
+    // child writes to parent
+    // 1 is the write-to end; close the read-from end
+    close(pipeData[0]);
+    // direct output to the pipe
+    dup2(pipeData[1], 1);
+    // close the unused end
+    close(pipeData[1]);
     // parse the cmd_with_args into cmd_only and cmd_args
     parse_command(cmd_with_args, cmd_only, cmd_args);
 
@@ -143,8 +167,8 @@ void create_command_process (char cmds[MAX_CMDS_NUM],   // Command line to be pr
     execvp(cmd_only, cmd_with_args);
 
     // if this point is reached, execvp has failed; print an error to console and die
-    perror("ERROR: failed to execute %s\n", cmds[0]);
-    exit(-1);
+    perror("ERROR: Failed to execute %s\n", cmds[0]);
+    _exit(-1);
   }
 }
 
