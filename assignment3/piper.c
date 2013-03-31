@@ -206,7 +206,7 @@ void killPipeline( int signum ) {
 
 int main(int ac, char *av[]){
 
-  int i, pipcount;
+  int i;
   //check usage
   if (ac > 1){
     printf("\nIncorrect use of parameters\n");
@@ -220,10 +220,8 @@ int main(int ac, char *av[]){
   logfp = fopen("LOGFILE", "w");
 
   while (1) {
-    signal(SIGINT, SIG_DFL ); 
-    pipcount = 0;
+    signal(SIGINT, SIG_DFL);
 
-    /*  Get input command file anme form the user */
     char pipeCommand[MAX_INPUT_LINE_LENGTH];
 
     fflush(stdout);
@@ -238,30 +236,24 @@ int main(int ac, char *av[]){
       exit(0);
     }  
 
+    // parse the command line and count the commands
     num_cmds = parse_command_line(pipeCommand, cmds);
 
-    /*  SET UP SIGNAL HANDLER  TO HANDLE CNTRL-C                         */
+    // set up signal handler to handle ctrl-c
     signal(SIGINT, killPipeline); 
 
-    /*  num_cmds indicates the number of command lines in the input file */
-
-    /* The following code will create a pipeline of processes, one for   */
-    /* each command in the given pipe                                    */
-    /* For example: for command "ls -l | grep ^d | wc -l "  it will      */
-    /* create 3 processes; one to execute "ls -l", second for "grep ^d"  */
-    /* and the third for executing "wc -l"                               */
-
     for(i = 0; i < num_cmds; i++){
-         /*  CREATE A NEW PROCCES EXECUTE THE i'TH COMMAND    */
-         /*  YOU WILL NEED TO CREATE A PIPE, AND CONNECT THIS NEW  */
-         /*  PROCESS'S stdin AND stdout TO APPROPRIATE PIPES    */ 
+      // for each command, create a new process and pipe the processes together
       create_command_process(cmds[i], cmd_pids, i);
     }
 
+    // debug info to logfile
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
 
-    waitPipelineTermination();;
+    // wait for pipeline to close
+    waitPipelineTermination();
 
+    // debug info to logfile after pipeline closes
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
 
     }
