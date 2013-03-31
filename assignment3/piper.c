@@ -275,6 +275,12 @@ int main(int ac, char *av[]){
     if (strcmp(pipeCommand, terminator) == 0) {
       fflush(logfp);
       fclose(logfp);
+
+      // I FIGURED OUT THE DOUBLEQUIT BUG AND IT'S REPRODUCIBLE
+      // if you type a command that can't be executed, like "exit" or "asbdfliasduvoiuafsd",
+      // then you have to type "quit" the same number of times as the number of bad
+      // commands you entered! now we have to fix it
+
       printf("Goodbye!\n");
       exit(0);
     }  
