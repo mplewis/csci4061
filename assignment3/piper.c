@@ -28,7 +28,7 @@
 #include <setjmp.h>
 
 #define DEBUG
-#define QUIT_STRING "quit"
+#define QUIT_STRING "quit"         // what the user types to exit
 
 #define MAX_INPUT_LINE_LENGTH 2048 // Maximum length of the input pipeline command
                                    // such as "ls -l | sort -d +4 | cat "
@@ -44,8 +44,27 @@ int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
 
 static sigjmp_buf jmpbuf;
-int newPipeData[2];                   // the pipeline used by everything
+int newPipeData[2];                   // the pipelines used by all processes
 int oldPipeData[2];
+
+/* WHAT UP, HERE'S HOW IT WORKS!
+ *
+ * fork, child execs process1
+ *   stdin --> process1 --> newPipeData
+ *     !! set oldPipeData = newPipeData
+ *
+ * fork, child execs process2
+ *   process1 --> oldPipeData --> process2 --> newPipeData
+ *     !! set oldPipeData = newPipeData
+ *
+ * fork, child execs process3
+ *   process2 --> oldPipeData --> process3 --> stdout
+ * 
+ * thus...
+ *   stdin --> process1 --> process2 --> process3 --> stdout
+ *
+ * that's pretty neat
+ */
 
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
@@ -90,14 +109,16 @@ void parse_command(char input[MAX_CMD_LENGTH],
                    char command[MAX_CMD_LENGTH],
                    char *argvector[MAX_CMD_LENGTH]){
   int count = 0;
+
+  // use the string tokenizer to split the string by ' ' (space) characters
   argvector[count] = strtok(input, " ");
   count++;
   while((argvector[count] = strtok(NULL, " ")) != NULL) {
     count++;
   }
+  // the command has to be found in both argvector[0] and the command argument of execvp
   strcpy(command, argvector[0]);
 }
-
 
 /*******************************************************************************/
 /*  The function print_info will print to the LOGFILE information about all    */
@@ -108,15 +129,13 @@ void parse_command(char input[MAX_CMD_LENGTH],
 void print_info(char* cmds[MAX_CMDS_NUM],
 		int cmd_pids[MAX_CMDS_NUM],
 		int cmd_stat[MAX_CMDS_NUM],
-		int num_cmds) {
-
+		int num_cmds)
+{
 #ifdef DEBUG
+  // put debug data in LOGFILE only if the debug flag is set
   fprintf(logfp, "Commands: %d, Command PIDs: %d, Command Stats: %d, Number of Commands: %d \n", cmds, cmd_pids, cmd_stat, num_cmds); 
 #endif
-
 }  
-
-
 
 /*******************************************************************************/
 /*     The create_command_process function will create a child process         */
@@ -126,47 +145,66 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 /*     i'th index the PID of the new child process.                            */
 /*******************************************************************************/
 
+// create_command_process creates a process and routes the pipes all at once
 
-void create_command_process (char cmd[MAX_CMD_LENGTH],   // Command line to be processed
+void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be processed
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
-			     int i)                       // commmand line number being processed
+			                       int i)                       // commmand line number being processed
 {
   int child_pid;
   char cmd_only[MAX_CMD_LENGTH];
   char *cmd_args[MAX_CMD_LENGTH];
 
-  if(i < (num_cmds-1)) {
+  // Execute this if it isn't the last command
+  if(i < (num_cmds - 1)) {
+    // Create a pipe and die on errors
     if (pipe(newPipeData) == -1) {
       perror("ERROR: Failed to create pipe\n");
       exit(1);
     }
   }
+  // Fork and die on errors
   if ((child_pid = fork()) == -1) {
     perror("ERROR: Could not fork\n");
     exit(-1);
   }
 
-  if(child_pid == 0) { // This is the child
-    if(i > 0) { // Is there a previous command?
+  // Everything after this point is post-fork.
+
+  if(child_pid == 0) {
+    // This is the child
+
+    // If there's a previous command, attach the child's input to the past
+    // command's output (oldPipeData)
+    if(i > 0) {
       close(oldPipeData[1]);
       dup2(oldPipeData[0], 0);
       close(oldPipeData[0]);
     }
-    if(i < (num_cmds-1)) { // Is there a future command?
+    // If there's a future command, attach the child's output to the future
+    // command's input (newPipeData)
+    if(i < (num_cmds-1)) {
       close(newPipeData[0]);
       dup2(newPipeData[1], 1);
       close(newPipeData[1]);
     }
     parse_command(cmd, cmd_only, cmd_args);
     execvp(cmd_only, cmd_args);
-  }
-  else { // This is the parent
+
+  } else {
+    // This is the parent
+
+    // Store the child pid in the array of child pids
     cmd_pids[i] = child_pid;
-    if(i > 0) { // Is there a previous command?
+
+    // If there's a previous command, make sure you close the pipe (oldPipeData)
+    if(i > 0) {
       close(oldPipeData[0]);
       close(oldPipeData[1]);
     }
-    if(i < (num_cmds-1)) { // Is there a future command?
+    // If there's a future command, update oldPipeData to match the newly-created
+    // pipe so it's ready for the next command
+    if(i < (num_cmds - 1)) {
       oldPipeData[0] = newPipeData[0];
       oldPipeData[1] = newPipeData[1];
     }
@@ -209,7 +247,8 @@ int main(int ac, char *av[]){
 
   int i;
   
-  // return an error if someone tries to pass arguments in
+  // return an error if someone tries to pass arguments into the program
+  // at the command line
   if (ac > 1){
     printf("\nIncorrect use of parameters\n");
     printf("USAGE: %s \n", av[0]);
@@ -223,6 +262,7 @@ int main(int ac, char *av[]){
 
   while (1) {
     char pipeCommand[MAX_INPUT_LINE_LENGTH];
+    // QUIT_STRING is what the user types to exit
     char* terminator = QUIT_STRING;
 
     // set sigint to default behavior (interrupt the program)
@@ -231,7 +271,7 @@ int main(int ac, char *av[]){
     printf("Give a list of pipe commands: ");
     gets(pipeCommand);
     printf("You entered: %s\n", pipeCommand);
-    // if the user types "quit", then quit
+    // if the user types QUIT_STRING, then quit
     if (strcmp(pipeCommand, terminator) == 0) {
       fflush(logfp);
       fclose(logfp);
@@ -239,7 +279,8 @@ int main(int ac, char *av[]){
       exit(0);
     }  
 
-    // parse the command line and count the commands
+    // parse the command line and count how many separate commands
+    // are to be piped together
     num_cmds = parse_command_line(pipeCommand, cmds);
 
     // set up signal handler to handle ctrl-c
