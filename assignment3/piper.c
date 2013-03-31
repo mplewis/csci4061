@@ -28,6 +28,7 @@
 #include <setjmp.h>
 
 #define DEBUG
+#define QUIT_STRING "quit"
 
 #define MAX_INPUT_LINE_LENGTH 2048 // Maximum length of the input pipeline command
                                    // such as "ls -l | sort -d +4 | cat "
@@ -38,7 +39,7 @@
 FILE *logfp;
 
 int num_cmds;
-char *cmds[MAX_CMDS_NUM];          // commands split by |
+char *cmds[MAX_CMDS_NUM];             // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
 
@@ -207,28 +208,30 @@ void killPipeline( int signum ) {
 int main(int ac, char *av[]){
 
   int i;
-  //check usage
+  
+  // return an error if someone tries to pass arguments in
   if (ac > 1){
     printf("\nIncorrect use of parameters\n");
     printf("USAGE: %s \n", av[0]);
     exit(1);
   }
 
-  /* Set up signal handler for CNTRL-C to kill only the pipeline processes  */
+  // set up signal handler for ctrl-c to kill only the pipeline processes
   sigsetjmp(jmpbuf, 1);
 
   logfp = fopen("LOGFILE", "w");
 
   while (1) {
-    signal(SIGINT, SIG_DFL);
-
     char pipeCommand[MAX_INPUT_LINE_LENGTH];
+    char* terminator = QUIT_STRING;
 
+    // set sigint to default behavior (interrupt the program)
+    signal(SIGINT, SIG_DFL);
     fflush(stdout);
     printf("Give a list of pipe commands: ");
-    gets(pipeCommand); 
-    char* terminator = "quit";
+    gets(pipeCommand);
     printf("You entered: %s\n", pipeCommand);
+    // if the user types "quit", then quit
     if (strcmp(pipeCommand, terminator) == 0) {
       fflush(logfp);
       fclose(logfp);
