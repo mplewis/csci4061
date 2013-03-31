@@ -43,7 +43,8 @@ int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
 
 static sigjmp_buf jmpbuf;
-int pipeData[2];                   // the pipeline used by everything
+int newPipeData[2];                   // the pipeline used by everything
+int oldPipeData[2];
 
 /*******************************************************************************/
 /*   The function parse_command_line will take a string such as
@@ -64,10 +65,8 @@ int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_
 {
   int count = 0;
   cmds[count] = strtok(commandLine, "|");
-  printf("cmds[%i] = %s\n", count, cmds[count]);
   count++;
   while((cmds[count] = strtok(NULL, "|")) != NULL) {
-    printf("cmds[%i] = %s\n", count, cmds[count]);
     count++;
   }
   return count;
@@ -91,10 +90,8 @@ void parse_command(char input[MAX_CMD_LENGTH],
                    char *argvector[MAX_CMD_LENGTH]){
   int count = 0;
   argvector[count] = strtok(input, " ");
-  fprintf(stderr, "argvector[%i] = %s\n", count, argvector[count]);
   count++;
   while((argvector[count] = strtok(NULL, " ")) != NULL) {
-    fprintf(stderr, "argvector[%i] = %s\n", count, argvector[count]);
     count++;
   }
   strcpy(command, argvector[0]);
@@ -134,60 +131,44 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],   // Command line to be p
 			     int i)                       // commmand line number being processed
 {
   int child_pid;
-  // create pipeline in pipeData
-  if (pipe(pipeData) == -1) {
-    perror("ERROR: Failed to create pipe\n");
-    exit(-1);
+  char cmd_only[MAX_CMD_LENGTH];
+  char *cmd_args[MAX_CMD_LENGTH];
+
+  if(i < (num_cmds-1)) {
+    if (pipe(newPipeData) == -1) {
+      perror("ERROR: Failed to create pipe\n");
+      exit(1);
+    }
   }
-  // fork to parent and child
   if ((child_pid = fork()) == -1) {
     perror("ERROR: Could not fork\n");
     exit(-1);
   }
-  if (child_pid) {
-    // this process is the parent, store the child pid in the array
-    printf("I am parent process with pid %i\n", getpid());
-    cmd_pids[i] = child_pid;
 
-    /*
-    // parent reads from child
-    // 0 is the read-from end; close the write-to end
-    close(pipeData[1]);
-    // take input from the pipe
-    dup2(pipeData[0], 0);
-    // close the unused end
-    close(pipeData[0]);
-    */
-
-  } else {
-    // this process is the child
-    printf("I am the child process with pid %i\n", getpid());
-    char cmd_only[MAX_CMD_LENGTH];
-    char *cmd_args[MAX_CMD_LENGTH];
-
-    /*
-    // connect to pipeline
-    // child writes to parent
-    // 1 is the write-to end; close the read-from end
-    fprintf(stderr, "I'm closing pipedata[0]\n");
-    close(pipeData[0]);
-    // direct output to the pipe
-    fprintf(stderr, "I'm running dup2\n");
-    dup2(pipeData[1], 1);
-    // close the unused end
-    fprintf(stderr, "I'm closing pipeData[1]\n");
-    close(pipeData[1]);
-    */
-
-    // parse the cmd_with_args into cmd_only and cmd_args
-    fprintf(stderr, "I'm doing parse_command\n");
+  if(child_pid == 0) { // This is the child
+    if(i > 0) { // Is there a previous command?
+      close(oldPipeData[1]);
+      dup2(oldPipeData[0], 0);
+      close(oldPipeData[0]);
+    }
+    if(i < (num_cmds-1)) { // Is there a future command?
+      close(newPipeData[0]);
+      dup2(newPipeData[1], 1);
+      close(newPipeData[1]);
+    }
     parse_command(cmd, cmd_only, cmd_args);
-    // execute the command
-    fprintf(stderr, "I'm executing the command <%s>\n", cmd_only);
     execvp(cmd_only, cmd_args);
-    // if this point is reached, execvp has failed; print an error to console and die
-    fprintf(stderr, "ERROR: Failed to execute command <%s>\n", cmd_only);
-    _exit(-1);
+  }
+  else { // This is the parent
+    cmd_pids[i] = child_pid;
+    if(i > 0) { // Is there a previous command?
+      close(oldPipeData[0]);
+      close(oldPipeData[1]);
+    }
+    if(i < (num_cmds-1)) { // Is there a future command?
+      oldPipeData[0] = newPipeData[0];
+      oldPipeData[1] = newPipeData[1];
+    }
   }
 }
 
@@ -217,6 +198,7 @@ void killPipeline( int signum ) {
     kill(cmd_pids[j], SIGKILL);
     j++;
   }
+  printf("\nPipeline Killed\n");
   siglongjmp(jmpbuf, 1);
 }
 
@@ -237,9 +219,7 @@ int main(int ac, char *av[]){
 
   logfp = fopen("LOGFILE", "w");
 
-  
-
-  // while (1) {
+  while (1) {
     signal(SIGINT, SIG_DFL ); 
     pipcount = 0;
 
@@ -250,19 +230,18 @@ int main(int ac, char *av[]){
     printf("Give a list of pipe commands: ");
     gets(pipeCommand); 
     char* terminator = "quit";
-    printf("You entered: list of pipe commands %s\n", pipeCommand);
-    if ( strcmp(pipeCommand, terminator) == 0  ) {
+    printf("You entered: %s\n", pipeCommand);
+    if (strcmp(pipeCommand, terminator) == 0) {
       fflush(logfp);
       fclose(logfp);
       printf("Goodbye!\n");
       exit(0);
     }  
 
-    num_cmds = parse_command_line( pipeCommand, cmds);
-    printf("num_cmds = %d\n", num_cmds);
+    num_cmds = parse_command_line(pipeCommand, cmds);
 
     /*  SET UP SIGNAL HANDLER  TO HANDLE CNTRL-C                         */
-    //signal(SIGINT, killPipeline); 
+    signal(SIGINT, killPipeline); 
 
     /*  num_cmds indicates the number of command lines in the input file */
 
@@ -275,17 +254,16 @@ int main(int ac, char *av[]){
     for(i = 0; i < num_cmds; i++){
          /*  CREATE A NEW PROCCES EXECUTE THE i'TH COMMAND    */
          /*  YOU WILL NEED TO CREATE A PIPE, AND CONNECT THIS NEW  */
-         /*  PROCESS'S stdin AND stdout TO APPROPRIATE PIPES    */  
-      create_command_process (cmds[i], cmd_pids, i);
+         /*  PROCESS'S stdin AND stdout TO APPROPRIATE PIPES    */ 
+      create_command_process(cmds[i], cmd_pids, i);
     }
+    print_info(cmds, cmd_pids, cmd_status, num_cmds);
+
+    waitPipelineTermination();;
 
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
 
-    waitPipelineTermination();
-
-    print_info(cmds, cmd_pids, cmd_status, num_cmds);
-
-    //}
+    }
 } //end main
 
 /*************************************************/
