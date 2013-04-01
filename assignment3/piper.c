@@ -42,6 +42,7 @@ int num_cmds;
 char *cmds[MAX_CMDS_NUM];             // commands split by |
 int cmd_pids[MAX_CMDS_NUM];
 int cmd_status[MAX_CMDS_NUM]; 
+int cmd_exits[MAX_CMDS_NUM];          // exit status of each command
 
 static sigjmp_buf jmpbuf;
 int newPipeData[2];                   // the pipelines used by all processes
@@ -90,6 +91,11 @@ int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_
   while((cmds[count] = strtok(NULL, "|")) != NULL) {
     count++;
   }
+  int j;
+  //log all commands to be spawned
+  for (j = 0; j < count; j++) {
+    fprintf(logfp, "Command %i info: %s\n", j, cmds[j]);
+  }
   return count;
 }
 
@@ -132,9 +138,13 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 		int cmd_stat[MAX_CMDS_NUM],
 		int num_cmds)
 {
-#ifdef DEBUG
-  // put debug data in LOGFILE only if the debug flag is set
-  fprintf(logfp, "Commands: %d, Command PIDs: %d, Command Stats: %d, Number of Commands: %d \n", cmds, cmd_pids, cmd_stat, num_cmds); 
+#ifdef DEBUG 
+  // print part d: exit status and pids of all processes
+  fprintf(logfp, "PID\t\tCOMMAND\t\tEXIT STATUS\n");
+  int count;
+  for (count = 0; count < num_cmds; count++) {
+    fprintf(logfp, "%i\t\t%s\t\t%i\n", cmd_pids[count], cmds[count], cmd_exits[count]);
+  }
 #endif
 }  
 
@@ -147,6 +157,7 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 /*******************************************************************************/
 
 // create_command_process creates a process and routes the pipes all at once
+// it also checks to make sure the requested commands exist and can be run
 
 void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be processed
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
@@ -155,6 +166,16 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be 
   int child_pid;
   char cmd_only[MAX_CMD_LENGTH];
   char *cmd_args[MAX_CMD_LENGTH];
+
+  if (!commandExists(cmd)) {
+    // log bad command
+    fprintf(logfp, "Command doesn't exist: %s\nKilling the pipeline\n", cmd);
+    fprintf(stdout, "Command doesn't exist: %s\nKilling the pipeline\n", cmd);
+    // kill pipeline
+    killPipelineWhileSpawning(SIGINT, i);
+    // go back to main loop without executing command
+    return;
+    }
 
   // Execute this if it isn't the last command
   if(i < (num_cmds - 1)) {
@@ -190,8 +211,12 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be 
       close(newPipeData[1]);
     }
     parse_command(cmd, cmd_only, cmd_args);
-    fprintf(logfp, "Command %d info: %d\n", i, cmd); 
+    fprintf(logfp, "Command %i info: %s\n", i, cmd); 
     execvp(cmd_only, cmd_args);
+
+    // command execution failed, handle the error by killing the pipeline and
+    // printing it to the logfile
+    fprintf(logfp, "Terminating the command process while attempting to execute %s\n", cmd_only);
 
   } else {
     // This is the parent
@@ -221,9 +246,15 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be 
 void waitPipelineTermination () {
   int j = 0;
   while(j < num_cmds) {
-    waitpid(cmd_pids[j], NULL, 0);
+    int status;
+    fprintf(logfp, "waiting...");
+    waitpid(cmd_pids[j], &status, 0);
+    cmd_exits[j] = WEXITSTATUS(status);
     j++;
+    fprintf(logfp, "Process id %d finished\n", cmd_pids[j]);
+    fprintf(logfp, "Process id %d finished with exit status %d\n", cmd_pids[j], cmd_exits[j]);
   }
+  fprintf(logfp, "\n");
 }
 
 /********************************************************************************/
@@ -239,7 +270,20 @@ void killPipeline( int signum ) {
     kill(cmd_pids[j], SIGKILL);
     j++;
   }
-  printf("\nPipeline Killed\n");
+  siglongjmp(jmpbuf, 1);
+}
+
+// killPipelineWhileSpawning is used only when creating a bad process that must
+// be killed. num_cmds doesn't work because it has been incremented but the child
+// pid has not been stored, meaning kill() kills pid 0, meaning it kills piper too.
+// to kill just the children that have been spawned, we have to kill everything but
+// cmd_pids[j]
+void killPipelineWhileSpawning( int signum , int i) {
+  int j = 0;
+  while(j < i - 1) {
+    kill(cmd_pids[j], SIGKILL);
+    j++;
+  }
   siglongjmp(jmpbuf, 1);
 }
 
@@ -252,6 +296,7 @@ int commandExists(char cmd[MAX_CMD_LENGTH]) {
   cmd_only = strtok(cmd, " ");
   strcpy(whichStr, "which ");
   strcat(whichStr, cmd_only);
+  strcat(whichStr, " >/dev/null 2>&1");
   return (system(whichStr) == 0);
 }
 
@@ -265,7 +310,7 @@ int main(int ac, char *av[]){
   // at the command line
   if (ac > 1){
     printf("\nIncorrect use of parameters\n");
-    printf("USAGE: %s \n", av[0]);
+    printf("USAGE: %s\n", av[0]);
     exit(1);
   }
 
@@ -301,14 +346,8 @@ int main(int ac, char *av[]){
     signal(SIGINT, killPipeline); 
 
     for(i = 0; i < num_cmds; i++){
-      // test if each command exists
-      //      if (commandExists(cmds[i])) {
-	// for each command, create a new process and pipe the processes together
-	create_command_process(cmds[i], cmd_pids, i);
-	//      } else {
-	// kill the pipeline
-	//	killPipeline(SIGKILL);
-	//      }
+      // create the command process, checking to make sure each program exists
+      create_command_process(cmds[i], cmd_pids, i);
     }
     fprintf(logfp, "Number of commands from the input: %d\n\n", num_cmds);
 
