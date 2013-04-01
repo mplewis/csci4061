@@ -119,8 +119,10 @@ void parse_command(char input[MAX_CMD_LENGTH],
 
   // use the string tokenizer to split the string by ' ' (space) characters
   argvector[count] = strtok(input, " ");
+  printf("%s\n", argvector[count]);
   count++;
   while((argvector[count] = strtok(NULL, " ")) != NULL) {
+    printf("%s\n", argvector[count]);
     count++;
   }
   // the command has to be found in both argvector[0] and the command argument of execvp
@@ -175,7 +177,7 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be 
     killPipelineWhileSpawning(SIGINT, i);
     // go back to main loop without executing command
     return;
-    }
+  }
 
   // Execute this if it isn't the last command
   if(i < (num_cmds - 1)) {
@@ -292,10 +294,10 @@ void killPipelineWhileSpawning( int signum , int i) {
 
 int commandExists(char cmd[MAX_CMD_LENGTH]) {
   char whichStr[MAX_CMD_LENGTH];
-  char *cmd_only;
-  cmd_only = strtok(cmd, " ");
+  char *cmd_alone;
+  cmd_alone = strtok(cmd, " ");
   strcpy(whichStr, "which ");
-  strcat(whichStr, cmd_only);
+  strcat(whichStr, cmd_alone);
   strcat(whichStr, " >/dev/null 2>&1");
   return (system(whichStr) == 0);
 }
