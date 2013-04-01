@@ -84,6 +84,7 @@ int oldPipeData[2];
 int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_CMDS_NUM])
 {
   int count = 0;
+  // use the string tokenizer to split the string by '|' (pipe) characters
   cmds[count] = strtok(commandLine, "|");
   count++;
   while((cmds[count] = strtok(NULL, "|")) != NULL) {
@@ -149,7 +150,7 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 
 void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be processed
                              int cmd_pids[MAX_CMDS_NUM],  // PIDs of pipeline processes
-			                       int i)                       // commmand line number being processed
+			     int i)                       // commmand line number being processed
 {
   int child_pid;
   char cmd_only[MAX_CMD_LENGTH];
@@ -189,6 +190,7 @@ void create_command_process (char cmd[MAX_CMD_LENGTH],    // Command line to be 
       close(newPipeData[1]);
     }
     parse_command(cmd, cmd_only, cmd_args);
+    fprintf(logfp, "Command %d info: %d\n", i, cmd); 
     execvp(cmd_only, cmd_args);
 
   } else {
@@ -241,6 +243,18 @@ void killPipeline( int signum ) {
   siglongjmp(jmpbuf, 1);
 }
 
+// commandExists(cmd) checks if cmd exists by running 'which [cmd]'
+// if 'which [cmd]' returns non-zero, then cmd does not exist
+
+int commandExists(char cmd[MAX_CMD_LENGTH]) {
+  char whichStr[MAX_CMD_LENGTH];
+  char *cmd_only;
+  cmd_only = strtok(cmd, " ");
+  strcpy(whichStr, "which ");
+  strcat(whichStr, cmd_only);
+  return (system(whichStr) == 0);
+}
+
 /********************************************************************************/
 
 int main(int ac, char *av[]){
@@ -275,15 +289,9 @@ int main(int ac, char *av[]){
     if (strcmp(pipeCommand, terminator) == 0) {
       fflush(logfp);
       fclose(logfp);
-
-      // I FIGURED OUT THE DOUBLEQUIT BUG AND IT'S REPRODUCIBLE
-      // if you type a command that can't be executed, like "exit" or "asbdfliasduvoiuafsd",
-      // then you have to type "quit" the same number of times as the number of bad
-      // commands you entered! now we have to fix it
-
       printf("Goodbye!\n");
       exit(0);
-    }  
+    }
 
     // parse the command line and count how many separate commands
     // are to be piped together
@@ -293,9 +301,16 @@ int main(int ac, char *av[]){
     signal(SIGINT, killPipeline); 
 
     for(i = 0; i < num_cmds; i++){
-      // for each command, create a new process and pipe the processes together
-      create_command_process(cmds[i], cmd_pids, i);
+      // test if each command exists
+      //      if (commandExists(cmds[i])) {
+	// for each command, create a new process and pipe the processes together
+	create_command_process(cmds[i], cmd_pids, i);
+	//      } else {
+	// kill the pipeline
+	//	killPipeline(SIGKILL);
+	//      }
     }
+    fprintf(logfp, "Number of commands from the input: %d\n\n", num_cmds);
 
     // debug info to logfile
     print_info(cmds, cmd_pids, cmd_status, num_cmds);
