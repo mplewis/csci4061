@@ -115,15 +115,13 @@ int parse_command_line (char commandLine[MAX_INPUT_LINE_LENGTH], char* cmds[MAX_
 void parse_command(char input[MAX_CMD_LENGTH],
                    char command[MAX_CMD_LENGTH],
                    char *argvector[MAX_CMD_LENGTH]){
-  int count = 0;
+  int ct = 0;
 
   // use the string tokenizer to split the string by ' ' (space) characters
-  argvector[count] = strtok(input, " ");
-  printf("%s\n", argvector[count]);
-  count++;
-  while((argvector[count] = strtok(NULL, " ")) != NULL) {
-    printf("%s\n", argvector[count]);
-    count++;
+  argvector[ct] = strtok(input, " ");
+  ct++;
+  while((argvector[ct] = strtok(NULL, " ")) != NULL) {
+    ct++;
   }
   // the command has to be found in both argvector[0] and the command argument of execvp
   strcpy(command, argvector[0]);
@@ -143,9 +141,9 @@ void print_info(char* cmds[MAX_CMDS_NUM],
 #ifdef DEBUG 
   // print part d: exit status and pids of all processes
   fprintf(logfp, "PID\t\tCOMMAND\t\tEXIT STATUS\n");
-  int count;
-  for (count = 0; count < num_cmds; count++) {
-    fprintf(logfp, "%i\t\t%s\t\t%i\n", cmd_pids[count], cmds[count], cmd_exits[count]);
+  int c;
+  for (c = 0; c < num_cmds; c++) {
+    fprintf(logfp, "%i\t\t%s\t\t%i\n", cmd_pids[c], cmds[c], cmd_exits[c]);
   }
 #endif
 }  
@@ -250,7 +248,7 @@ void waitPipelineTermination () {
   while(j < num_cmds) {
     int status;
     fprintf(logfp, "waiting...");
-    waitpid(cmd_pids[j], &status, 0);
+    waitpid(cmd_pids[j], NULL, 0);
     cmd_exits[j] = WEXITSTATUS(status);
     j++;
     fprintf(logfp, "Process id %d finished\n", cmd_pids[j]);
@@ -292,13 +290,16 @@ void killPipelineWhileSpawning( int signum , int i) {
 // commandExists(cmd) checks if cmd exists by running 'which [cmd]'
 // if 'which [cmd]' returns non-zero, then cmd does not exist
 
-int commandExists(char cmd[MAX_CMD_LENGTH]) {
+int commandExists(char test_cmd[MAX_CMD_LENGTH]) {
   char whichStr[MAX_CMD_LENGTH];
+  char input_command[MAX_CMD_LENGTH];
+  strcpy(input_command, test_cmd);
   char *cmd_alone;
-  cmd_alone = strtok(cmd, " ");
+  cmd_alone = strtok(input_command, " ");
   strcpy(whichStr, "which ");
   strcat(whichStr, cmd_alone);
   strcat(whichStr, " >/dev/null 2>&1");
+  printf("CMD %s\n", whichStr);
   return (system(whichStr) == 0);
 }
 
