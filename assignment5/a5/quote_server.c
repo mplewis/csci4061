@@ -80,12 +80,6 @@ void *server_instance(void *void_msgsock) {
             printf("Server: Rec'd msg:\n");
             printf("    %s\n", request);
 
-            if (was_msg_bye(request)) {
-                printf(" * Message was bye!\n");
-                rval = 0;
-                break;
-            }
-
             /* Write back to client. */
             strcpy(request, DATA1);
             if (send(msgsock, response, BUFFER_SIZE, 0) < 0) {
