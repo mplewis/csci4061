@@ -27,11 +27,6 @@
 void die(const char *);
 void pdie(const char *);
 
-struct request_type {
-    char req_command[16];
-    char params[256];
-};
-
 
 int was_msg_bye(char *msg) {
     char *msg_lower = malloc(BUFFER_SIZE);
@@ -41,17 +36,16 @@ int was_msg_bye(char *msg) {
 
 void *server_instance(void *void_msgsock) {
     int rval;
-    struct request_type *req;
-    struct request_type *response;
+    char *request;
+    char *response;
     int msgsock;
     rval = malloc(sizeof(int));
-    const int req_struct_size = (sizeof(char) * (256 + 16));
-    req = malloc(req_struct_size);
-    response = malloc(req_struct_size);
+    request = malloc(BUFFER_SIZE);
+    response = malloc(BUFFER_SIZE);
     msgsock = (int)void_msgsock;
     do {
         /* Read from client until it's closed the connection. */
-        if ((rval = recv(msgsock, req, req_struct_size, 0)) < 0){
+        if ((rval = recv(msgsock, request, BUFFER_SIZE, 0)) < 0){
             pdie("Reading stream message");
         }
         printf("DEBUG: rval = %i\n", rval);
@@ -60,25 +54,23 @@ void *server_instance(void *void_msgsock) {
             fprintf(stderr, "Server: Ending connection\n");
         } else {
             printf("Server: Rec'd msg:\n");
-            printf("---req_command: %s\n", req->req_command);
-            printf("---params: %s\n", req->params);
+            printf("    %s\n", request);
 
-            if (was_msg_bye(req->req_command)) {
-                printf("Message was bye!\n");
+            if (was_msg_bye(request)) {
+                printf(" * Message was bye!\n");
                 rval = 0;
                 break;
             }
 
             /* Write back to client. */
-            strcpy(response->req_command, DATA1);
-            strcpy(response->params, DATA2);
+            strcpy(request, DATA1);
             if (send(msgsock, response, BUFFER_SIZE, 0) < 0) {
                 pdie("Writing on stream socket");
             }
         }
     } while (rval != 0);
     close(msgsock);
-    free(req);
+    free(request);
     free(response);
     printf("Thread here, signing off. Good bye.\n");
 }
