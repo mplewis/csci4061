@@ -20,7 +20,7 @@
 #define DATA1 "Server says:"
 #define DATA2 "All your base are belong to us..."
 #define TRUE 1
-#define SERVER_PORT 5001
+#define SERVER_PORT 6789
 #define BUFFER_SIZE 1024
 
 /* prototypes */
