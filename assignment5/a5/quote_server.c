@@ -253,7 +253,7 @@ void *server_instance(void *void_msgsock) {
             printf("    %s\n", request);
 
             /* Write back to client. */
-            strcpy(request, DATA1);
+            strcpy(response, "ello guvna\n");
             if (send(msgsock, response, BUFFER_SIZE, 0) < 0) {
                 pdie("Writing on stream socket");
             }
