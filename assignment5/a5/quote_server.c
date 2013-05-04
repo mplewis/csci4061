@@ -40,18 +40,9 @@ void str_lower(char *str) {
 }
 
 /*
-Compares a string to the string "bye". Not case-sensitive.
 Params:
-    char *str: String to be compared to "bye".
 Returns:
-    1 if string is "equivalent" to "bye"
-    0 if string is not "equivalent" to "bye"
 */
-int was_msg_bye(char *str) {
-    char *str_lowered = malloc(BUFFER_SIZE);
-    str_lower(str_lowered);
-    strcpy(str_lowered, str);
-    return (strcmp(str_lowered, "BYE") == 0);
 }
 
 /*
