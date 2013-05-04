@@ -17,9 +17,6 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#define DATA1 "Server says:"
-#define DATA2 "All your base are belong to us..."
-#define TRUE 1
 #define SERVER_PORT 6789
 #define BUFFER_SIZE 1024
 
@@ -115,7 +112,7 @@ int main(void) {
 
     /* Loop, waiting for client connections. */
     /* This is an interactive server. */
-    while (TRUE) {
+    while (1) {
         clientLen = sizeof(client);
         if ((msgsock = accept(sock, (struct sockaddr *) &client, &clientLen)) == -1) {
             pdie("Accept");
