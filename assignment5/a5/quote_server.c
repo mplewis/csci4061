@@ -273,6 +273,21 @@ int main() {
     int clientLen;               /* returned length of client from accept() */
     int rval;                    /* return value from read() */
 
+    // setup randomizer from system time
+    srand(time(NULL));
+
+    // initialize log file pointer and logging mutex
+    pthread_mutex_init(log_lock, NULL);
+    log_file = fopen(LOG_FILE_LOC, "w");
+
+    // initialize category arrays
+    char *cat_names[MAX_QUOTE_FILES] = {0};
+    char *cat_file_locs[MAX_QUOTE_FILES] = {0};
+
+    // fill arrays with config data
+    int num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
+                                         cat_file_locs);
+
     /* Open a socket */
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
         pdie("Opening stream socket");
