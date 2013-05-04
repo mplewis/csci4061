@@ -27,13 +27,37 @@
 void die(const char *);
 void pdie(const char *);
 
-
-int was_msg_bye(char *msg) {
-    char *msg_lower = malloc(BUFFER_SIZE);
-    strcpy(msg_lower, msg);
-    return (strcmp(msg_lower, "BYE") == 0);
+/*
+Converts a string to all lowercase, in-place.
+Params:
+    char *str: String to convert to lowercase.
+*/
+void str_lower(char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        str[i] = tolower(str[i]);
+    }
 }
 
+/*
+Compares a string to the string "bye". Not case-sensitive.
+Params:
+    char *str: String to be compared to "bye".
+Returns:
+    1 if string is "equivalent" to "bye"
+    0 if string is not "equivalent" to "bye"
+*/
+int was_msg_bye(char *str) {
+    char *str_lowered = malloc(BUFFER_SIZE);
+    str_lower(str_lowered);
+    strcpy(str_lowered, str);
+    return (strcmp(str_lowered, "BYE") == 0);
+}
+
+/*
+Message server instance. Use me as a pthread!
+Pass in the file descriptor of an open socket.
+*/
 void *server_instance(void *void_msgsock) {
     int rval;
     char *request;
