@@ -265,8 +265,7 @@ void *server_instance(void *void_msgsock) {
     printf("Thread here, signing off. Good bye.\n");
 }
 
-int main(void) {
-
+int main() {
     int sock;                    /* fd for main socket */
     int msgsock;                 /* fd from accept return */
     struct sockaddr_in server;   /* socket struct for server connection */
