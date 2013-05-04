@@ -231,16 +231,16 @@ int main() {
     // setup quote text and author strings
     char *text = malloc(sizeof(char) * MAX_LINE_LEN);
     char *author = malloc(sizeof(char) * MAX_LINE_LEN);
+
+    // open file pointers to quote category text files
     open_fps_from_cat_file_locs(file_pointers, num_cats, cat_file_locs);
 
     // print 8 quotes from randomly-selected categories
-    //*
     for (int i = 0; i < 8; i++) {
         get_quote_from_specific_category(text, author, num_cats, cat_names,
                                          file_pointers, "Any");
         printf("%s by %s\n", text, author);
     }
-    //*/
 
     // write some sample log items
     for (int i = 0; i < 10; i++) {    
