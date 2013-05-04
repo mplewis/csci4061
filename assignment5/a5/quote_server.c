@@ -33,7 +33,6 @@ char *line_from_file;
 size_t max_line_len = MAX_LINE_LEN;
 ssize_t num_chars_in_line;
 FILE *file_pointers[MAX_QUOTE_FILES] = {0};
-pthread_mutex_t *log_lock;
 
 /* prototypes */
 void die(const char *);
@@ -276,8 +275,7 @@ int main() {
     // setup randomizer from system time
     srand(time(NULL));
 
-    // initialize log file pointer and logging mutex
-    pthread_mutex_init(log_lock, NULL);
+    // initialize log file pointer
     log_file = fopen(LOG_FILE_LOC, "w");
 
     // initialize category arrays
