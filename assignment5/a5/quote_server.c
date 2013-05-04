@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #define LOG_FILE_LOC          "server.log"
 #define QUOTE_CONFIG_FILE_LOC "config.txt"
@@ -32,6 +33,24 @@ size_t max_line_len = MAX_LINE_LEN;
 ssize_t num_chars_in_line;
 FILE *file_pointers[MAX_QUOTE_FILES] = {0};
 pthread_mutex_t *log_lock;
+pthread_t tid;
+void *status;
+int rval;                    /* return value from read() */
+char req[MAX_LINE_LEN];
+char *response;
+int sock;                    /* fd for main socket */
+int msgsock;                 /* fd from accept return */
+struct sockaddr_in server;   /* socket struct for server connection */
+struct sockaddr_in client;   /* socket struct for client connection */
+int clientLen;               /* returned length of client from accept() */
+int num_cats;
+
+    // initialize category arrays
+char *cat_names[MAX_QUOTE_FILES] = {0};
+char *cat_file_locs[MAX_QUOTE_FILES] = {0};
+
+char *text;
+char *author;
 
 /* prototypes */
 void die(const char *);
@@ -228,22 +247,57 @@ int get_quote_from_specific_category(char *quote_text, char *quote_author,
     }
 }
 
+int pthread_main(char *request) {
+  rval = malloc(sizeof(ssize_t));
+  if ((rval = recv(msgsock, &req, sizeof(req),0)) < 0){
+	  perror("ERROR: Reading stream message");
+	  exit(1);
+	}
+  while(1) {
+	if (rval == 0) {
+	  /* Client has closed the connection */
+	  fprintf(stderr, "Server: Ending connection\n");
+	} else {
+	  if (request == "BYE") {
+	    close(msgsock);
+	    free(msgsock);
+	    free(rval);
+	    printf("pthread closed by client");
+	    return 0;
+	  }
+	  else if (request == "LIST") { // array is cat_file_locs, iterate over num_cats 
+	    for(int i; i > num_cats; i++) {
+	      if (send(msgsock, cat_file_locs[i], sizeof(response),0) < 0){
+	      perror("ERROR: Writing on stream socket");
+	      exit(1);
+	      }
+	    }
+	  }
+	  else {
+	    text = malloc(sizeof(char) * MAX_LINE_LEN);
+	    author = malloc(sizeof(char) * MAX_LINE_LEN);
+	    response = malloc(sizeof(char) * MAX_LINE_LEN);
+	    get_quote_from_specific_category(text, author, num_cats, cat_names, file_pointers, request);
+	    strcpy(response, text);
+	    strcat(response, "\n-");
+	    strcat(response, author);
+	    if (send(msgsock, &response, sizeof(response),0) < 0){
+	      perror("ERROR: Writing on stream socket");
+	      exit(1);
+	    }
+	    free(text);
+	    free(author);
+	    free(response);
+	  }
+	}
+  }
+}
+
 /**********************************************************************
  * main
  **********************************************************************/
 
 int main(void) {
-
-  int sock;                    /* fd for main socket */
-  int msgsock;                 /* fd from accept return */
-  struct sockaddr_in server;   /* socket struct for server connection */
-  struct sockaddr_in client;   /* socket struct for client connection */
-  int clientLen;               /* returned length of client from accept() */
-  int rval;                    /* return value from read() */
-
-
-  struct request_type req;
-  struct request_type response;
 
   // setup randomizer from system time
     srand(time(NULL));
@@ -252,12 +306,9 @@ int main(void) {
     pthread_mutex_init(log_lock, NULL);
     log_file = fopen(LOG_FILE_LOC, "w");
 
-    // initialize category arrays
-    char *cat_names[MAX_QUOTE_FILES] = {0};
-    char *cat_file_locs[MAX_QUOTE_FILES] = {0};
 
     // fill arrays with config data
-    int num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
+    num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
                                          cat_file_locs);
     
     // debug config.txt info to stdout
@@ -267,8 +318,8 @@ int main(void) {
     }
 
     // setup quote text and author strings
-    char *text = malloc(sizeof(char) * MAX_LINE_LEN);
-    char *author = malloc(sizeof(char) * MAX_LINE_LEN);
+    text = malloc(sizeof(char) * MAX_LINE_LEN);
+    author = malloc(sizeof(char) * MAX_LINE_LEN);
     open_fps_from_cat_file_locs(file_pointers, num_cats, cat_file_locs);
 
     /* print 8 quotes from randomly-selected categories
@@ -321,44 +372,17 @@ int main(void) {
   /* Loop, waiting for client connections. */
   /* This is an interactive server. */
   while (1) {
-
     clientLen = sizeof(client);
+    msgsock = malloc(sizeof(int));
     if ((msgsock = accept(sock, (struct sockaddr *) &client, &clientLen)) == -1) {
       perror("ERROR: Accepting connection");
-    } else {
-     
-      do {   
-	/* Read from client until it's closed the connection. */
-
-	if ((rval = recv(msgsock, &req, sizeof(req),0)) < 0){
-	  perror("ERROR: Reading stream message");
-	  exit(1);
+    } else { 
+      if(pthread_create(&tid, NULL, (void *)pthread_main, &req) != 0) {
+	      perror("ERROR: Creating pthread");
+	      exit(1);
+	    }
 	}
-
-	if (rval == 0) {
-	  /* Client has closed the connection */
-	  fprintf(stderr, "Server: Ending connection\n");
-	} else {
-	  printf("Server: Rec'd msg:\n");
-	  printf("---req_command: %s\n", req.req_command);
-	  printf("---params: %s\n", req.params);
-	
-	  /* Write back to client. */
-	  strcpy(response.req_command, "Hello");
-	  strcpy(response.params, "World!");
-	  if (send(msgsock, &response, sizeof(response),0) < 0){
-	    perror("ERROR: Writing on stream socket");
-	    exit(1);
-	  }
-	}
-      } while (rval != 0);
-    }   /* else */
-
-    close(msgsock);
   }
-
-  exit(0);
-
 }
 
 /**********************************************************************
