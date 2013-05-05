@@ -22,10 +22,8 @@
 #define QUOTE_CONFIG_FILE_LOC "config.txt"
 #define MAX_QUOTE_FILES       16
 #define MAX_LINE_LEN          1024
-#define MAX_NAME_FILENAME_LEN 256
-
+#define BUFFER_SIZE           1024
 #define SERVER_PORT 6789
-#define BUFFER_SIZE 1024
 
 FILE *fp;
 FILE *log_file;
@@ -73,7 +71,7 @@ int init_cats_from_config(int max_num_cats, char **cat_names,
         int token_count = 0;
         while (token != NULL) {
             // copy and store tokens in the proper array
-            char *token_copy = malloc(sizeof(char) * MAX_NAME_FILENAME_LEN);
+            char *token_copy = malloc(sizeof(char) * BUFFER_SIZE);
             // tokenize the line by the separator ": "
             strcpy(token_copy, token);
             // the first token is the category name, the second token is the
