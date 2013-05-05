@@ -29,7 +29,7 @@ FILE *fp;
 FILE *log_file;
 char *line_from_file;
 size_t max_line_len = MAX_LINE_LEN;
-ssize_t num_chars_in_line;
+
 FILE *file_pointers[MAX_QUOTE_FILES] = {0};
 
 /* prototypes */
@@ -281,7 +281,7 @@ int main() {
     char *cat_file_locs[MAX_QUOTE_FILES] = {0};
 
     // fill arrays with config data
-    int num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
+    num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
                                          cat_file_locs);
 
     /* Open a socket */
