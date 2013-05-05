@@ -56,8 +56,7 @@ int init_cats_from_config(int max_num_cats, char **cat_names,
     }
     int num_categories = 0;
     char *token;
-    while (num_chars_in_line = getline(&line_from_file, &max_line_len, fp)
-           != -1) {
+    while (getline(&line_from_file, &max_line_len, fp) != -1) {
         if (num_categories == max_num_cats) {
             break;
         }
@@ -122,8 +121,7 @@ void get_next_quote_from_cat_file(char *quote_text, char *quote_author,
                                   FILE *cat_file_pointer) {
     int last_line_char;
 
-    while (num_chars_in_line = getline(&line_from_file, &max_line_len,
-           cat_file_pointer) == -1) {
+    if (getline(&line_from_file, &max_line_len, cat_file_pointer) == -1) {
         rewind(cat_file_pointer);
     }
     // strip newline char from line
@@ -133,8 +131,7 @@ void get_next_quote_from_cat_file(char *quote_text, char *quote_author,
     }
     strcpy(quote_text, line_from_file);
 
-    while (num_chars_in_line = getline(&line_from_file, &max_line_len,
-           cat_file_pointer) == -1) {
+    if (getline(&line_from_file, &max_line_len, cat_file_pointer) == -1) {
         rewind(cat_file_pointer);
     }
     // strip newline char from line
@@ -269,6 +266,9 @@ int main() {
     struct sockaddr_in client;   /* socket struct for client connection */
     int clientLen;               /* returned length of client from accept() */
     int rval;                    /* return value from read() */
+
+    // allocate string for getting quote
+    line_from_file = malloc(sizeof(char) * MAX_LINE_LEN);
 
     // setup randomizer from system time
     srand(time(NULL));
