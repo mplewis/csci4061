@@ -34,6 +34,7 @@ FILE *file_pointers[MAX_QUOTE_FILES] = {0};
 char *cat_names[MAX_QUOTE_FILES] = {0};
 char *cat_file_locs[MAX_QUOTE_FILES] = {0};
 int num_cats;
+int last_line_char;
 
 /* prototypes */
 void die(const char *);
@@ -327,7 +328,8 @@ int main() {
     int clientLen;               /* returned length of client from accept() */
     int rval;                    /* return value from read() */
 
-    // allocate string for getting quote
+    // allocate char* and int for getting quote
+    last_line_char = 0;
     line_from_file = malloc(sizeof(char) * MAX_LINE_LEN);
 
     // setup randomizer from system time
