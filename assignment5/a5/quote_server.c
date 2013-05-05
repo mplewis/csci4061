@@ -31,6 +31,9 @@ char *line_from_file;
 size_t max_line_len = MAX_LINE_LEN;
 
 FILE *file_pointers[MAX_QUOTE_FILES] = {0};
+char *cat_names[MAX_QUOTE_FILES] = {0};
+char *cat_file_locs[MAX_QUOTE_FILES] = {0};
+int num_cats;
 
 /* prototypes */
 void die(const char *);
@@ -276,9 +279,6 @@ int main() {
     // initialize log file pointer
     log_file = fopen(LOG_FILE_LOC, "w");
 
-    // initialize category arrays
-    char *cat_names[MAX_QUOTE_FILES] = {0};
-    char *cat_file_locs[MAX_QUOTE_FILES] = {0};
 
     // fill arrays with config data
     num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
