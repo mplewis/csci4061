@@ -241,30 +241,75 @@ Pass in the file descriptor of an open socket.
 */
 void *server_instance(void *void_msgsock) {
     int rval;
+    int msgsock;
+    int was_bye;
     char *request;
     char *response;
-    int msgsock;
+    char *quote_cat;
+    char *quote_text;
+    char *quote_author;
     rval = malloc(sizeof(int));
+    msgsock = (int)void_msgsock;
     request = malloc(BUFFER_SIZE);
     response = malloc(BUFFER_SIZE);
-    msgsock = (int)void_msgsock;
+    quote_cat = malloc(BUFFER_SIZE);
+    quote_text = malloc(BUFFER_SIZE);
+    quote_author = malloc(BUFFER_SIZE);
     do {
         /* Read from client until it's closed the connection. */
-        if ((rval = recv(msgsock, request, BUFFER_SIZE, 0)) < 0){
+        if ((rval = recv(msgsock, request, BUFFER_SIZE, 0)) < 0) {
             pdie("Reading stream message");
         }
-        printf("DEBUG: rval = %i\n", rval);
         if (rval == 0) {
             /* Client has closed the connection */
             fprintf(stderr, "Server: Ending connection\n");
         } else {
             printf("Server: Rec'd msg:\n");
-            printf("    %s\n", request);
+            printf("    \"%s\"\n", request);
 
-            /* Write back to client. */
-            strcpy(response, "ello guvna\n");
-            if (send(msgsock, response, BUFFER_SIZE, 0) < 0) {
-                pdie("Writing on stream socket");
+            was_bye = 0;
+            if (strcmp(request, "GET: LIST\n") == 0) {
+                printf("Detected request for category list\n");
+                strcpy(response, "Categories:\n");
+                for (int i = 0; i < num_cats; i++) {
+                    strcat(response, cat_names[i]);
+                    strcat(response, "\n");
+                }
+            } else if (strcmp(request, "BYE\n") == 0) {
+                printf("Bye-bye!\n");
+                was_bye = 1;
+            } else {
+                str_upper(request);
+                // find the last colon in the request string
+                quote_cat = strrchr(request, ':');
+                quote_cat += 2;
+                // strip newline char from line
+                int last_line_char = strlen(quote_cat) - 1;
+                if (quote_cat[last_line_char] == '\n') {
+                    quote_cat[last_line_char] = '\0';
+                }
+                printf("Detected quote category: \"%s\"\n", quote_cat);
+                if (get_quote_from_specific_category(quote_text, quote_author,
+                                                     num_cats, cat_names,
+                                                     file_pointers, quote_cat)
+                    printf("Category %s not found\n");
+                    == -1) {
+                    strcpy(response, "Category ");
+                    strcat(response, quote_cat);
+                    strcat(response, " not found\n");
+                } else {
+                    strcpy(response, quote_text);
+                    strcat(response, "\n");
+                    strcat(response, quote_author);
+                    strcat(response, "\n");
+                }
+            }
+
+            if (was_bye == 0) {
+                /* Write back to client. */
+                if (send(msgsock, response, BUFFER_SIZE, 0) < 0) {
+                    pdie("Writing on stream socket");
+                }
             }
         }
     } while (rval != 0);
