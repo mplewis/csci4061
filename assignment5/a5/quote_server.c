@@ -336,7 +336,6 @@ int main() {
     // initialize log file pointer
     log_file = fopen(LOG_FILE_LOC, "w");
 
-
     // fill arrays with config data
     num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
                                          cat_file_locs);
