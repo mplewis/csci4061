@@ -170,6 +170,18 @@ void str_lower(char *str) {
 }
 
 /*
+Converts a string to all uppercase, in-place.
+Params:
+    char *str: String to convert to uppercase.
+*/
+void str_upper(char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        str[i] = toupper(str[i]);
+    }
+}
+
+/*
 Given a category name and the array of category file pointers, returns the body
     of a quote and its author. Also accepts "ANY". Returns -1 if category does
     not exist.
