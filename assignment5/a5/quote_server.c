@@ -346,6 +346,9 @@ int main() {
     num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
                                      cat_file_locs);
 
+    // open file pointers to quote files
+    open_fps_from_cat_file_locs(file_pointers, num_cats, cat_file_locs);
+
     /* Open a socket */
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
         pdie("Opening stream socket");
