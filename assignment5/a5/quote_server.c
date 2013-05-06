@@ -123,26 +123,33 @@ Params:
 void get_next_quote_from_cat_file(char *quote_text, char *quote_author,
                                   FILE *cat_file_pointer) {
     int last_line_char;
+    char *quote_line = malloc(sizeof(char) * MAX_LINE_LEN);
 
-    if (getline(&line_from_file, &max_line_len, cat_file_pointer) == -1) {
+    // check if fp is null
+    if (cat_file_pointer == NULL) {
+        printf("FP is null\n");
+        return;
+    }
+
+    if (fgets(quote_line, MAX_LINE_LEN, cat_file_pointer) == NULL) {
         rewind(cat_file_pointer);
     }
     // strip newline char from line
-    last_line_char = strlen(line_from_file) - 1;
-    if (line_from_file[last_line_char] == '\n') {
-        line_from_file[last_line_char] = '\0';
+    last_line_char = strlen(quote_line) - 1;
+    if (quote_line[last_line_char] == '\n') {
+        quote_line[last_line_char] = '\0';
     }
-    strcpy(quote_text, line_from_file);
+    strcpy(quote_text, quote_line);
 
-    if (getline(&line_from_file, &max_line_len, cat_file_pointer) == -1) {
+    if (fgets(quote_line, MAX_LINE_LEN, cat_file_pointer) == NULL) {
         rewind(cat_file_pointer);
     }
     // strip newline char from line
-    last_line_char = strlen(line_from_file) - 1;
-    if (line_from_file[last_line_char] == '\n') {
-        line_from_file[last_line_char] = '\0';
+    last_line_char = strlen(quote_line) - 1;
+    if (quote_line[last_line_char] == '\n') {
+        quote_line[last_line_char] = '\0';
     }
-    strcpy(quote_author, line_from_file);
+    strcpy(quote_author, quote_line);
 }
 
 /*
