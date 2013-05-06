@@ -298,8 +298,8 @@ void *server_instance(void *void_msgsock) {
                 if (get_quote_from_specific_category(quote_text, quote_author,
                                                      num_cats, cat_names,
                                                      file_pointers, quote_cat)
-                    printf("Category %s not found\n");
                     == -1) {
+                    printf("Category %s not found\n", quote_cat);
                     strcpy(response, "Category ");
                     strcat(response, quote_cat);
                     strcat(response, " not found\n");
