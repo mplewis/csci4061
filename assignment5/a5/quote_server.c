@@ -60,17 +60,18 @@ int init_cats_from_config(int max_num_cats, char **cat_names,
     }
     int num_categories = 0;
     char *token;
-    while (getline(&line_from_file, &max_line_len, fp) != -1) {
+    char *line_from_cfg = malloc(sizeof(char) * MAX_LINE_LEN);
+    while (fgets(line_from_cfg, MAX_LINE_LEN, fp) != NULL) {
         if (num_categories == max_num_cats) {
             break;
         }
         // strip newline char from line
-        int last_line_char = strlen(line_from_file) - 1;
-        if (line_from_file[last_line_char] == '\n') {
-            line_from_file[last_line_char] = '\0';
+        int last_line_char = strlen(line_from_cfg) - 1;
+        if (line_from_cfg[last_line_char] == '\n') {
+            line_from_cfg[last_line_char] = '\0';
         }
         token = NULL;
-        token = strtok(line_from_file, ": ");
+        token = strtok(line_from_cfg, ": ");
         int token_count = 0;
         while (token != NULL) {
             // copy and store tokens in the proper array
@@ -107,7 +108,7 @@ void open_fps_from_cat_file_locs(FILE **file_pointers, int num_categories,
                                  char **cat_file_locs) {
     for (int i = 0; i < num_categories; i++) {
         if ((file_pointers[i] = fopen(cat_file_locs[i], "r")) == NULL) {
-            printf("Failure opening %s\n", QUOTE_CONFIG_FILE_LOC);
+            printf("Failure opening %s\n", cat_file_locs[i]);
             exit(1);
         }
     }
