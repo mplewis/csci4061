@@ -261,6 +261,7 @@ void *server_instance(void *void_msgsock) {
     quote_cat = malloc(BUFFER_SIZE);
     quote_text = malloc(BUFFER_SIZE);
     quote_author = malloc(BUFFER_SIZE);
+
     do {
         /* Read from client until it's closed the connection. */
         if ((rval = recv(msgsock, request, BUFFER_SIZE, 0)) < 0) {
