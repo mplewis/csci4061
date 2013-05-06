@@ -14,8 +14,6 @@
 FILE *fp;
 FILE *log_file;
 char *line_from_file;
-size_t max_line_len = MAX_LINE_LEN;
-ssize_t num_chars_in_line;
 FILE *file_pointers[MAX_QUOTE_FILES] = {0};
 pthread_mutex_t *log_lock;
 
@@ -39,8 +37,7 @@ int init_cats_from_config(int max_num_cats, char **cat_names,
     }
     int num_categories = 0;
     char *token;
-    while (num_chars_in_line = getline(&line_from_file, &max_line_len, fp)
-           != -1) {
+    while (fgets(line_from_file, MAX_LINE_LEN, fp) != NULL) {
         if (num_categories == max_num_cats) {
             break;
         }
@@ -101,12 +98,11 @@ Params:
     FILE *cat_file_pointer: The file pointer to the quote category text file
         from which to read quotes and quote authors.
 */
-void get_next_quote_from_cat_file(char *quote_text, char *quote_author,
-                                  FILE *cat_file_pointer) {
+void get_next_quote_from_cat_file_fgets(char *quote_text, char *quote_author,
+                                        FILE *cat_file_pointer) {
     int last_line_char;
 
-    while (num_chars_in_line = getline(&line_from_file, &max_line_len,
-           cat_file_pointer) == -1) {
+    if (fgets(line_from_file, MAX_LINE_LEN, cat_file_pointer) == NULL) {
         rewind(cat_file_pointer);
     }
     // strip newline char from line
@@ -116,8 +112,7 @@ void get_next_quote_from_cat_file(char *quote_text, char *quote_author,
     }
     strcpy(quote_text, line_from_file);
 
-    while (num_chars_in_line = getline(&line_from_file, &max_line_len,
-           cat_file_pointer) == -1) {
+    if (fgets(line_from_file, MAX_LINE_LEN, cat_file_pointer) == NULL) {
         rewind(cat_file_pointer);
     }
     // strip newline char from line
@@ -181,7 +176,7 @@ int get_quote_from_specific_category(char *quote_text, char *quote_author,
         // pick a random category
         int cat_num = (rand() % num_cats);
         FILE *cat_fp = cat_file_ptrs[cat_num];
-        get_next_quote_from_cat_file(quote_text, quote_author, cat_fp);
+        get_next_quote_from_cat_file_fgets(quote_text, quote_author, cat_fp);
     } else {
         char *str_to_cmp_b = malloc(sizeof(char) * MAX_LINE_LEN);
         for (int i = 0; i < num_cats; i++) {
@@ -193,7 +188,7 @@ int get_quote_from_specific_category(char *quote_text, char *quote_author,
             if (strcmp(str_to_cmp_a, str_to_cmp_b) == 0) {
                 cat_found = 1;
                 FILE *cat_fp = cat_file_ptrs[i];
-                get_next_quote_from_cat_file(quote_text, quote_author, cat_fp);
+                get_next_quote_from_cat_file_fgets(quote_text, quote_author, cat_fp);
             }
         }
         free(str_to_cmp_b);
@@ -213,6 +208,9 @@ int main() {
     // initialize log file pointer and logging mutex
     pthread_mutex_init(log_lock, NULL);
     log_file = fopen(LOG_FILE_LOC, "w");
+
+    // initialize line holder
+    line_from_file = malloc(sizeof(char) * MAX_LINE_LEN);
 
     // initialize category arrays
     char *cat_names[MAX_QUOTE_FILES] = {0};
