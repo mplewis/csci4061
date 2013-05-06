@@ -27,8 +27,6 @@
 
 FILE *fp;
 FILE *log_file;
-char *line_from_file;
-size_t max_line_len = MAX_LINE_LEN;
 
 FILE *file_pointers[MAX_QUOTE_FILES] = {0};
 char *cat_names[MAX_QUOTE_FILES] = {0};
