@@ -255,7 +255,6 @@ void *server_instance(void *void_msgsock) {
     char *quote_cat;
     char *quote_text;
     char *quote_author;
-    rval = malloc(sizeof(int));
     msgsock = (int)void_msgsock;
     request = malloc(BUFFER_SIZE);
     response = malloc(BUFFER_SIZE);
