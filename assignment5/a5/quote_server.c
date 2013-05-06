@@ -335,7 +335,6 @@ int main() {
 
     // allocate char* and int for getting quote
     last_line_char = 0;
-    line_from_file = malloc(sizeof(char) * MAX_LINE_LEN);
 
     // setup randomizer from system time
     srand(time(NULL));
