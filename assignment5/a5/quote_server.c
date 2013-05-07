@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +24,7 @@
 #define MAX_QUOTE_FILES       16
 #define MAX_LINE_LEN          1024
 #define BUFFER_SIZE           1024
-#define SERVER_PORT 6789
+#define SERVER_PORT           6789
 
 FILE *fp;
 FILE *log_file;
@@ -33,6 +34,12 @@ char *cat_names[MAX_QUOTE_FILES] = {0};
 char *cat_file_locs[MAX_QUOTE_FILES] = {0};
 int num_cats;
 int last_line_char;
+
+struct sockaddr_in server;   /* socket struct for server connection */
+struct sockaddr_in client;   /* socket struct for client connection */
+
+//////////////////////////////////////////////////////////////////////////////
+pthread_mutex_t lock;
 
 /* prototypes */
 void die(const char *);
@@ -242,6 +249,20 @@ int get_quote_from_specific_category(char *quote_text, char *quote_author,
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+// get current date and time in the format 'Mar-03-2013-20-24-04' and place it
+// in 'buffer' with a max length of 'bufsize'
+void time_to_buf(char* buffer, int bufsize)
+{
+    char* datetime;
+    int retval;
+    time_t clocktime;
+    struct tm *timeinfo;
+    time (&clocktime);
+    timeinfo = localtime( &clocktime );
+    strftime(buffer, bufsize, "%b-%d-%Y-%H-%M-%S", timeinfo); 
+}
+
 /*
 Message server instance. Use me as a pthread!
 Pass in the file descriptor of an open socket.
@@ -255,12 +276,25 @@ void *server_instance(void *void_msgsock) {
     char *quote_cat;
     char *quote_text;
     char *quote_author;
+    char *datebuf;
+    char *ipaddress;
     msgsock = (int)void_msgsock;
     request = malloc(BUFFER_SIZE);
     response = malloc(BUFFER_SIZE);
     quote_cat = malloc(BUFFER_SIZE);
     quote_text = malloc(BUFFER_SIZE);
     quote_author = malloc(BUFFER_SIZE);
+    datebuf = malloc(BUFFER_SIZE);
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    //Enter critical LOGFILE edit section
+    pthread_mutex_lock(&lock);
+    time_to_buf(datebuf, BUFFER_SIZE);
+    ipaddress = inet_ntoa(client.sin_addr);
+    //fprintf(log_file, "Connection Opened: Month-Day-Year-Hr-Min-Sec: IP-Address\n");
+    fprintf(log_file, "Connection Opened: %s: %s\n", datebuf, ipaddress);
+    fflush(log_file);
+    pthread_mutex_unlock(&lock);
 
     do {
         /* Read from client until it's closed the connection. */
@@ -274,15 +308,31 @@ void *server_instance(void *void_msgsock) {
             printf("Server: Rec'd msg:\n");
             printf("    \"%s\"\n", request);
 
-            was_bye = 0;
-            if (strcmp(request, "GET: LIST\n") == 0) {
+	    int last_line_char = strlen(request) - 1;
+	    if (request[last_line_char] == '\n') {
+	        request[last_line_char] = '\0';
+	    }	   
+ 
+	    /////////////////////////////////////////////////////////////////////////////////////
+	    //Enter critical LOGFILE edit section
+	    pthread_mutex_lock(&lock);
+	    time_to_buf(datebuf, BUFFER_SIZE);
+	    ipaddress = inet_ntoa(client.sin_addr);
+	    //fprintf(log_file, "Request Received: Month-Day-Year-Hr-Min-Sec: IP-Address: Request\n");
+	    fprintf(log_file, "Request Received: %s: %s: %s\n", datebuf, ipaddress, request);
+	    fflush(log_file);
+	    pthread_mutex_unlock(&lock);
+
+            was_bye = 0;                
+
+            if (strcmp(request, "GET: LIST") == 0) {
                 printf("Detected request for category list\n");
                 strcpy(response, "Categories:\n");
                 for (int i = 0; i < num_cats; i++) {
                     strcat(response, cat_names[i]);
                     strcat(response, "\n");
                 }
-            } else if (strcmp(request, "BYE\n") == 0) {
+            } else if (strcmp(request, "BYE") == 0) {
                 printf("Bye-bye!\n");
                 was_bye = 1;
             } else {
@@ -291,10 +341,7 @@ void *server_instance(void *void_msgsock) {
                 quote_cat = strrchr(request, ':');
                 quote_cat += 2;
                 // strip newline char from line
-                int last_line_char = strlen(quote_cat) - 1;
-                if (quote_cat[last_line_char] == '\n') {
-                    quote_cat[last_line_char] = '\0';
-                }
+
                 printf("Detected quote category: \"%s\"\n", quote_cat);
                 if (get_quote_from_specific_category(quote_text, quote_author,
                                                      num_cats, cat_names,
@@ -312,6 +359,16 @@ void *server_instance(void *void_msgsock) {
                 }
             }
 
+	    /////////////////////////////////////////////////////////////////////////////////////
+	    //Enter critical LOGFILE edit section
+	    pthread_mutex_lock(&lock);
+	    time_to_buf(datebuf, BUFFER_SIZE);
+	    ipaddress = inet_ntoa(client.sin_addr);
+	    //fprintf(log_file, "Request Completed: Month-Day-Year-Hr-Min-Sec: IP-Address: Request\n");
+	    fprintf(log_file, "Request Completed: %s: %s: %s\n", datebuf, ipaddress, request);
+	    fflush(log_file);
+	    pthread_mutex_unlock(&lock);
+
             if (was_bye == 0) {
                 /* Write back to client. */
                 if (send(msgsock, response, BUFFER_SIZE, 0) < 0) {
@@ -323,14 +380,25 @@ void *server_instance(void *void_msgsock) {
     close(msgsock);
     free(request);
     free(response);
+    free(datebuf);
+    free(quote_text);
+    free(quote_author);
     printf("Thread here, signing off. Good bye.\n");
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    //Enter critical LOGFILE edit section
+    pthread_mutex_lock(&lock);
+    time_to_buf(datebuf, BUFFER_SIZE);
+    ipaddress = inet_ntoa(client.sin_addr);
+    //fprintf(log_file, "Connection Closed: Month-Day-Year-Hr-Min-Sec: IP-Address\n");
+    fprintf(log_file, "Connection Closed: %s: %s\n\n", datebuf, ipaddress);
+    fflush(log_file);
+    pthread_mutex_unlock(&lock);
 }
 
 int main() {
     int sock;                    /* fd for main socket */
     int msgsock;                 /* fd from accept return */
-    struct sockaddr_in server;   /* socket struct for server connection */
-    struct sockaddr_in client;   /* socket struct for client connection */
     int clientLen;               /* returned length of client from accept() */
     int rval;                    /* return value from read() */
 
@@ -341,7 +409,7 @@ int main() {
     srand(time(NULL));
 
     // initialize log file pointer
-    log_file = fopen(LOG_FILE_LOC, "w");
+    log_file = fopen(LOG_FILE_LOC, "a");
 
     // fill arrays with config data
     num_cats = init_cats_from_config(MAX_QUOTE_FILES, cat_names,
@@ -349,6 +417,13 @@ int main() {
 
     // open file pointers to quote files
     open_fps_from_cat_file_locs(file_pointers, num_cats, cat_file_locs);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // initialize the mutex lock
+    if (pthread_mutex_init(&lock, NULL) != 0) {
+      printf("Mutex lock initialization failure");
+      return 1;
+    }
 
     /* Open a socket */
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
@@ -391,7 +466,6 @@ int main() {
  **********************************************************************/
 
 void pdie(const char *mesg) {
-
     perror(mesg);
     exit(1);
 }
@@ -402,7 +476,6 @@ void pdie(const char *mesg) {
  **********************************************************************/
 
 void die(const char *mesg) {
-
     fputs(mesg, stderr);
     fputc('\n', stderr);
     exit(1);
